@@ -1,0 +1,8 @@
+<resources>
+
+    <string name="app_name">Busca Fone</string>
+    <string name="menu_settings">Configurações</string>
+    <string name="tv_number_search">Número de Telefone</string>
+    <string name="title_activity_number_search">UANAM</string>
+
+</resources>
