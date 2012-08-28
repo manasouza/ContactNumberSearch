@@ -10,6 +10,7 @@ import android.content.ContentResolver;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.util.Log;
 import android.view.Menu;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -36,12 +37,23 @@ public class NumberSearchActivity extends Activity {
         		String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
         		if (Integer.parseInt(cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
         			//Query phone here.  Covered next
+        			Cursor phoneCursor = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[] { id }, null);
         			
-//        			TextView tv2 = (TextView) findViewById(R.id.textView2);
-//        			tv2.setText(id);        			
-//        			adapter.add(name);
         			map.put(CONTACT_NAME_ITEM, name);
-        			map.put(CONTACT_PHONE_ITEM, id);
+        			
+        			if (phoneCursor == null) {
+        				Log.w(this.getClass().getName(), "Null Phone Cursor for contact: " + name);
+        				continue;
+        			}
+        			
+        			String phones = "";
+        			while (phoneCursor.moveToNext()) {
+        				if (!phones.isEmpty()) {
+        					phones += " / ";
+        				}
+            			map.put(CONTACT_PHONE_ITEM, phones += phoneCursor.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));        				
+        			}
+        			
         			data.add(map);
         		}
         	}
