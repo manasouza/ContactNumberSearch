@@ -11,7 +11,11 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
+import android.view.View;
+import android.view.View.OnKeyListener;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
@@ -26,6 +30,16 @@ public class NumberSearchActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.number_search_form);
         ContentResolver cr = getContentResolver();
+        
+        EditText etPhoneNumber = (EditText) findViewById(R.id.etPhoneNumber);
+        etPhoneNumber.setOnKeyListener(new OnKeyListener() {			
+			@Override
+			public boolean onKey(View v, int keyCode, KeyEvent event) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+		});
+        
         Cursor cursor = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
         if (cursor.getCount() > 0) {
         	List<Map<String, Object>> data = new ArrayList<Map<String,Object>>();
