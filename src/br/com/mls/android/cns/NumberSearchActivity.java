@@ -120,12 +120,14 @@ public class NumberSearchActivity extends Activity {
 			List<Map<String, Object>> dataList = new ArrayList<Map<String,Object>>();
 			String chars = etPhoneNumber.getText().toString();
 			char currentChar = event.getDisplayLabel();
+			int keyCode = event.getKeyCode();
 			
 			// Validation
 			try {
 				if (chars != null && !"".equals(chars)) {
 					Integer.parseInt(chars);
 				}
+				etPhoneNumber.setBackgroundColor(Color.WHITE);
 			} catch (NumberFormatException nfe) {
 				Log.e(this.getClass().getName(), "Invalid number", nfe);
 				etPhoneNumber.setBackgroundColor(Color.RED);
@@ -136,11 +138,11 @@ public class NumberSearchActivity extends Activity {
 			if (chars == null || "".equals(chars)) {
 				dataList = NumberSearchActivity.this.dataList;
 			} else {
-				for (int index = 0; index < listView.getAdapter().getCount(); index++) {
+				for (int index = 0; index < getSpecificContactListLength(keyCode); index++) {
 					Map<String, Object> newDataMap = new HashMap<String, Object>();
-					Map<String, Object> dataMap = (Map<String, Object>) listView.getAdapter().getItem(index);
+					Map<String, Object> dataMap = getSpecificItem(index, keyCode);
 					String phones = (String) dataMap.get(CONTACT_PHONE_ITEM);
-					if (phones != null && phones.contains((chars != null && !"".equals(chars)) ? chars : String.valueOf(currentChar))) {
+					if (phones != null && phones.contains((chars != null && !"".equals(chars)) ? chars : getCurrentChar(currentChar, chars, keyCode))) {
 						newDataMap.put(CONTACT_NAME_ITEM, dataMap.get(CONTACT_NAME_ITEM));
 						newDataMap.put(CONTACT_PHONE_ITEM, phones);
 						dataList.add(newDataMap);
@@ -152,9 +154,31 @@ public class NumberSearchActivity extends Activity {
 		}
 		return false;
 	}
+
+	@SuppressWarnings("unchecked")
+	private Map<String, Object> getSpecificItem(int index, int currentTypedKeyCode) {
+		if (KeyEvent.KEYCODE_DEL == currentTypedKeyCode) {
+			return this.dataList.get(index);
+		} else {
+			return (Map<String, Object>) listView.getAdapter().getItem(index);
+		}
+	}
+
+	private int getSpecificContactListLength(int currentTypedKeyCode) {
+		return KeyEvent.KEYCODE_DEL == currentTypedKeyCode ? this.dataList.size() : listView.getAdapter().getCount();
+	}
+
+	private String getCurrentChar(char currentChar, String cachedChars, int currentTypedKeyCode) {
+		return isNumber(currentChar, currentTypedKeyCode) ? String.valueOf(currentChar) : cachedChars;
+	}
 	
 
-    public static class ProgressListener {
+    private boolean isNumber(char currentChar, int keyCode) {
+		return keyCode >= KeyEvent.KEYCODE_0 && keyCode <= KeyEvent.KEYCODE_9 ? true : false;
+	}
+
+
+	public static class ProgressListener {
 
         public void dismiss() {
             progressDialog.dismiss();
