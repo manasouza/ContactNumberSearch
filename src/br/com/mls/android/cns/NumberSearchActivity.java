@@ -1,6 +1,8 @@
 package br.com.mls.android.cns;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +65,6 @@ public class NumberSearchActivity extends Activity {
 		        Cursor cursor = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
 		        List<Map<String, Object>> dataList = new ArrayList<Map<String,Object>>();
 		        if (cursor.getCount() > 0) {
-//					ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.contact_list, new int[] {});
 		    		listView = (ListView) findViewById(R.id.listView1);
 		        	while (cursor.moveToNext()) {
 		        		Map<String, Object> map = new HashMap<String, Object>();
@@ -92,6 +93,13 @@ public class NumberSearchActivity extends Activity {
 		        		}
 		        	}
 		        }
+		        // Sort by contact names
+		        Collections.sort(dataList, new Comparator<Map<String, Object>>() {
+					@Override
+					public int compare(Map<String, Object> lhs, Map<String, Object> rhs) {
+						return lhs.get(CONTACT_NAME_ITEM).toString().compareTo(rhs.get(CONTACT_NAME_ITEM).toString());
+					}
+				});
 				return dataList;
 			}
 			
@@ -168,6 +176,14 @@ public class NumberSearchActivity extends Activity {
 		return KeyEvent.KEYCODE_DEL == currentTypedKeyCode ? this.dataList.size() : listView.getAdapter().getCount();
 	}
 
+	public static class ProgressListener {
+
+        public void dismiss() {
+            progressDialog.dismiss();
+        }
+
+    }
+
 	private String getCurrentChar(char currentChar, String cachedChars, int currentTypedKeyCode) {
 		return isNumber(currentChar, currentTypedKeyCode) ? String.valueOf(currentChar) : cachedChars;
 	}
@@ -176,13 +192,4 @@ public class NumberSearchActivity extends Activity {
     private boolean isNumber(char currentChar, int keyCode) {
 		return keyCode >= KeyEvent.KEYCODE_0 && keyCode <= KeyEvent.KEYCODE_9 ? true : false;
 	}
-
-
-	public static class ProgressListener {
-
-        public void dismiss() {
-            progressDialog.dismiss();
-        }
-
-    }
 }
