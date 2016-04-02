@@ -6,10 +6,14 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.AsyncTask;
@@ -30,6 +34,8 @@ public class NumberSearchActivity extends Activity {
 	private static final String CONTACT_NAME_ITEM = "contactName";
 	
 	private static final String CONTACT_PHONE_ITEM = "contactPhone";
+
+	protected static final String CONTACTS_CACHE = "Contacts";
 	
 	private ListView listView;
 	
@@ -61,51 +67,20 @@ public class NumberSearchActivity extends Activity {
 
 			@Override
 			protected List<Map<String, Object>> doInBackground(Void... params) {
-				ContentResolver cr = getContentResolver();
-		        Cursor cursor = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
-		        List<Map<String, Object>> dataList = new ArrayList<Map<String,Object>>();
-		        if (cursor.getCount() > 0) {
-		    		listView = (ListView) findViewById(R.id.listView1);
-		        	while (cursor.moveToNext()) {
-		        		Map<String, Object> map = new HashMap<String, Object>();
-		        		String id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
-		        		String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-		        		if (Integer.parseInt(cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
-		        			//Query phone here.  Covered next
-		        			Cursor phoneCursor = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[] { id }, null);
-		        			
-		        			map.put(CONTACT_NAME_ITEM, name);
-		        			
-		        			if (phoneCursor == null) {
-		        				Log.w(this.getClass().getName(), "Null Phone Cursor for contact: " + name);
-		        				continue;
-		        			}
-		        			
-		        			String phones = "";
-		        			while (phoneCursor.moveToNext()) {
-		        				if (!phones.isEmpty()) {
-		        					phones += " / ";
-		        				}
-		            			map.put(CONTACT_PHONE_ITEM, phones += phoneCursor.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));        				
-		        			}
-		        			
-		        			dataList.add(map);
-		        		}
-		        	}
-		        }
-		        // Sort by contact names
-		        Collections.sort(dataList, new Comparator<Map<String, Object>>() {
-					@Override
-					public int compare(Map<String, Object> lhs, Map<String, Object> rhs) {
-						return lhs.get(CONTACT_NAME_ITEM).toString().compareTo(rhs.get(CONTACT_NAME_ITEM).toString());
-					}
-				});
-				return dataList;
+				SharedPreferences sharedPreferences = getSharedPreferences(CONTACTS_CACHE, MODE_PRIVATE);
+				if (sharedPreferences.getAll().isEmpty()) {
+					return getPhoneContactList();
+				} else {
+					return getCachedContactList(sharedPreferences.getAll());
+				}
 			}
 			
 			@Override
 			protected void onPostExecute(List<Map<String, Object>> result) {
 				super.onPostExecute(result);
+				if (listView == null) {
+					listView = (ListView) findViewById(R.id.listView1);
+				}
 	        	listView.setAdapter(new SimpleAdapter(NumberSearchActivity.this, result, R.layout.contact_list, 
 	        						new String[] { CONTACT_NAME_ITEM, CONTACT_PHONE_ITEM }, 
 	        						new int[] { R.id.textView1, R.id.textView2 }));
@@ -116,11 +91,73 @@ public class NumberSearchActivity extends Activity {
 		}.execute();
     }
 
-    @Override
+	@Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.number_search, menu);
         return true;
     }
+
+    protected List<Map<String, Object>> getCachedContactList(Map<String, ?> cachedContactsMap) {
+    	List<Map<String, Object>> contactList = new ArrayList<Map<String,Object>>();
+    	for (String contactName : cachedContactsMap.keySet()) {
+    		Map<String, Object> map = new HashMap<String, Object>();
+    		map.put(CONTACT_NAME_ITEM, contactName);
+    		map.put(CONTACT_PHONE_ITEM, cachedContactsMap.get(contactName));
+    		contactList.add(map);
+    	}
+		return contactList;
+	}
+
+	protected List<Map<String, Object>> getPhoneContactList() {
+        SharedPreferences sharedPreferences = getSharedPreferences(CONTACTS_CACHE, MODE_PRIVATE);
+        Editor prefEditor = sharedPreferences.edit();
+		ContentResolver cr = getContentResolver();
+        Cursor cursor = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
+        List<Map<String, Object>> contactList = new ArrayList<Map<String,Object>>();
+        if (cursor.getCount() > 0) {
+        	while (cursor.moveToNext()) {
+        		Map<String, Object> map = new HashMap<String, Object>();
+        		String id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
+        		String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+        		if (Integer.parseInt(cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
+        			//Query phone here.  Covered next
+        			Cursor phoneCursor = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[] { id }, null);
+        			
+        			map.put(CONTACT_NAME_ITEM, name);
+        			
+        			if (phoneCursor == null) {
+        				Log.w(this.getClass().getName(), "Null Phone Cursor for contact: " + name);
+        				continue;
+        			}
+        			
+        			String phones = "";
+        			while (phoneCursor.moveToNext()) {
+        				if (!phones.isEmpty()) {
+        					phones += " / ";
+        				}
+            			map.put(CONTACT_PHONE_ITEM, phones += phoneCursor.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));        				
+        			}
+        			
+        			Set<String> phoneNumberSet = new TreeSet<String>();
+        			phoneNumberSet.add(phones);
+        			prefEditor.putStringSet(name, phoneNumberSet);
+        			
+        			contactList.add(map);
+        		}
+        	}
+        	prefEditor.apply();
+        }
+        // Sort by contact names
+        Collections.sort(contactList, new Comparator<Map<String, Object>>() {
+			@Override
+			public int compare(Map<String, Object> lhs, Map<String, Object> rhs) {
+				return lhs.get(CONTACT_NAME_ITEM).toString().compareTo(rhs.get(CONTACT_NAME_ITEM).toString());
+			}
+		});
+        // Save to shared preferences
+//        prefEditor.
+		return contactList;
+	}
 
 	private boolean refreshContactList(final EditText etPhoneNumber, KeyEvent event) {
 		// TODO: http://stackoverflow.com/questions/3313347/how-to-update-simpleadapter-in-android
@@ -172,6 +209,12 @@ public class NumberSearchActivity extends Activity {
 		}
 	}
 
+	/**
+	 * Forward search uses the ListViewAdapter size
+	 * Backward search uses all registered contacts
+	 * @param currentTypedKeyCode
+	 * @return
+	 */
 	private int getSpecificContactListLength(int currentTypedKeyCode) {
 		return KeyEvent.KEYCODE_DEL == currentTypedKeyCode ? this.dataList.size() : listView.getAdapter().getCount();
 	}
