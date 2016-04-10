@@ -138,10 +138,7 @@ public class NumberSearchActivity extends Activity {
             			map.put(CONTACT_PHONE_ITEM, phones += phoneCursor.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));        				
         			}
         			
-        			Set<String> phoneNumberSet = new TreeSet<String>();
-        			phoneNumberSet.add(phones);
-        			prefEditor.putStringSet(name, phoneNumberSet);
-        			
+        			prefEditor.putString(name, phones);
         			contactList.add(map);
         		}
         	}
