@@ -6,8 +6,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -22,6 +20,7 @@ import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnKeyListener;
 import android.view.Window;
@@ -96,8 +95,42 @@ public class NumberSearchActivity extends Activity {
         getMenuInflater().inflate(R.menu.number_search, menu);
         return true;
     }
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		int id = item.getItemId();
+		if (id == R.id.update_contacts) {
+			updateContactList();
+		}
+		return super.onOptionsItemSelected(item);
+	}
 
-    protected List<Map<String, Object>> getCachedContactList(Map<String, ?> cachedContactsMap) {
+    private void updateContactList() {
+    	// TODO: i18n
+        progressDialog = ProgressDialog.show(this,
+                "Please wait...", "Retrieving contacts ...", true);        
+        new AsyncTask<Void, Void, List<Map<String, Object>>>() {
+        	@Override
+        	protected List<Map<String, Object>> doInBackground(Void... params) {
+        		SharedPreferences sharedPreferences = getSharedPreferences(CONTACTS_CACHE, MODE_PRIVATE);
+				sharedPreferences.edit().clear();
+        		return sharedPreferences.edit().commit() ? getPhoneContactList() : null; 
+        	}
+        	
+        	protected void onPostExecute(java.util.List<java.util.Map<String,Object>> result) {
+        		listView.setAdapter(new SimpleAdapter(NumberSearchActivity.this, result, R.layout.contact_list, 
+						new String[] { CONTACT_NAME_ITEM, CONTACT_PHONE_ITEM }, 
+						new int[] { R.id.textView1, R.id.textView2 }));
+        		NumberSearchActivity.this.dataList = result;
+	       		progressDialog.dismiss();
+	       		if (result == null) {
+	       			throw new IllegalStateException("Shared preferences failed to clear previous data. Contact list is null");
+	       		}
+        	};
+        }.execute();
+	}
+
+	protected List<Map<String, Object>> getCachedContactList(Map<String, ?> cachedContactsMap) {
     	List<Map<String, Object>> contactList = new ArrayList<Map<String,Object>>();
     	for (String contactName : cachedContactsMap.keySet()) {
     		Map<String, Object> map = new HashMap<String, Object>();

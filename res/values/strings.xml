@@ -4,5 +4,6 @@
     <string name="menu_settings">Configurações</string>
     <string name="tv_number_search">Número de Telefone</string>
     <string name="title_activity_number_search">Busca Fone</string>
+    <string name="update_contacts">Atualizar lista de contatos</string>
 
 </resources>
