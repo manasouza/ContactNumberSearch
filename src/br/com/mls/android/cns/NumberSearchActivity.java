@@ -42,6 +42,8 @@ public class NumberSearchActivity extends Activity {
 
 	private static ProgressDialog progressDialog;
 
+	private EditText etPhoneNumber;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
     	requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
@@ -54,11 +56,11 @@ public class NumberSearchActivity extends Activity {
         progressDialog = ProgressDialog.show(this,
                 "Please wait...", "Retrieving contacts ...", true);
         
-        final EditText etPhoneNumber = (EditText) findViewById(R.id.etPhoneNumber);
+        etPhoneNumber = (EditText) findViewById(R.id.etPhoneNumber);
         etPhoneNumber.setOnKeyListener(new OnKeyListener() {			
 			@Override
 			public boolean onKey(View v, int keyCode, KeyEvent event) {
-				return refreshContactList(etPhoneNumber, event);
+				return refreshContactList(etPhoneNumber.getText().toString(), event);
 			}
 		});
         
@@ -189,11 +191,10 @@ public class NumberSearchActivity extends Activity {
 		return contactList;
 	}
 
-	private boolean refreshContactList(final EditText etPhoneNumber, KeyEvent event) {
+	private boolean refreshContactList(String chars, KeyEvent event) {
 		// TODO: http://stackoverflow.com/questions/3313347/how-to-update-simpleadapter-in-android
 		if (event.getAction() == KeyEvent.ACTION_UP) { // on key released
 			List<Map<String, Object>> dataList = new ArrayList<Map<String,Object>>();
-			String chars = etPhoneNumber.getText().toString();
 			char currentChar = event.getDisplayLabel();
 			int keyCode = event.getKeyCode();
 			
@@ -202,10 +203,10 @@ public class NumberSearchActivity extends Activity {
 				if (chars != null && !"".equals(chars)) {
 					Integer.parseInt(chars);
 				}
-				etPhoneNumber.setBackgroundColor(Color.WHITE);
+				setPhoneTextFieldViewStatus(Color.WHITE);
 			} catch (NumberFormatException nfe) {
 				Log.e(this.getClass().getName(), "Invalid number", nfe);
-				etPhoneNumber.setBackgroundColor(Color.RED);
+				setPhoneTextFieldViewStatus(Color.RED);
 				return false;
 			}
 			
@@ -228,6 +229,14 @@ public class NumberSearchActivity extends Activity {
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * The text field status is based on its background color
+	 * @param colorStatus some time of {@link android.graphics.Color}
+	 */
+	private void setPhoneTextFieldViewStatus(int colorStatus) {
+		this.etPhoneNumber.setBackgroundColor(colorStatus);
 	}
 
 	@SuppressWarnings("unchecked")
