@@ -140,6 +140,7 @@ public class NumberSearchActivity extends Activity {
     		map.put(CONTACT_PHONE_ITEM, cachedContactsMap.get(contactName));
     		contactList.add(map);
     	}
+    	sortContactListByName(contactList);
 		return contactList;
 	}
 
@@ -179,16 +180,17 @@ public class NumberSearchActivity extends Activity {
         	}
         	prefEditor.apply();
         }
-        // Sort by contact names
-        Collections.sort(contactList, new Comparator<Map<String, Object>>() {
+        sortContactListByName(contactList);
+		return contactList;
+	}
+
+	private void sortContactListByName(List<Map<String, Object>> contactList) {
+		Collections.sort(contactList, new Comparator<Map<String, Object>>() {
 			@Override
 			public int compare(Map<String, Object> lhs, Map<String, Object> rhs) {
 				return lhs.get(CONTACT_NAME_ITEM).toString().compareTo(rhs.get(CONTACT_NAME_ITEM).toString());
 			}
 		});
-        // Save to shared preferences
-//        prefEditor.
-		return contactList;
 	}
 
 	private boolean refreshContactList(String chars, KeyEvent event) {
