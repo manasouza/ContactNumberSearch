@@ -18,12 +18,15 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnFocusChangeListener;
 import android.view.View.OnKeyListener;
 import android.view.Window;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -60,7 +63,15 @@ public class NumberSearchActivity extends Activity {
         etPhoneNumber.setOnKeyListener(new OnKeyListener() {			
 			@Override
 			public boolean onKey(View v, int keyCode, KeyEvent event) {
-				return refreshContactList(etPhoneNumber.getText().toString(), event);
+				if (KeyEvent.ACTION_UP == event.getAction()) { // on key released
+					// TODO: Eliminates high dependency with event keycode:
+					// 		create a boolean value that represents the backward search (when backspace) or forward search the way that it`s ruled by event.keyCode
+					return refreshContactList(etPhoneNumber.getText().toString(), event.getDisplayLabel(), event.getKeyCode());
+				// below code snippet was needed because the focus on EditText blocks the MenuItem to be shown.
+				} else if (KeyEvent.KEYCODE_MENU == event.getKeyCode()) {
+					v.clearFocus();
+				}
+				return false;
 			}
 		});
         
@@ -193,44 +204,38 @@ public class NumberSearchActivity extends Activity {
 		});
 	}
 
-	private boolean refreshContactList(String chars, KeyEvent event) {
+	private boolean refreshContactList(String chars, char currentChar, int keyCode) {
 		// TODO: http://stackoverflow.com/questions/3313347/how-to-update-simpleadapter-in-android
-		if (event.getAction() == KeyEvent.ACTION_UP) { // on key released
-			List<Map<String, Object>> dataList = new ArrayList<Map<String,Object>>();
-			char currentChar = event.getDisplayLabel();
-			int keyCode = event.getKeyCode();
-			
-			// Validation
-			try {
-				if (chars != null && !"".equals(chars)) {
-					Integer.parseInt(chars);
-				}
-				setPhoneTextFieldViewStatus(Color.WHITE);
-			} catch (NumberFormatException nfe) {
-				Log.e(this.getClass().getName(), "Invalid number", nfe);
-				setPhoneTextFieldViewStatus(Color.RED);
-				return false;
+		List<Map<String, Object>> dataList = new ArrayList<Map<String,Object>>();
+		// Validation
+		try {
+			if (chars != null && !"".equals(chars)) {
+				Integer.parseInt(chars);
 			}
-			
-			Log.d(this.getClass().getName(), "Typed numbers: " + chars);
-			if (chars == null || "".equals(chars)) {
-				dataList = NumberSearchActivity.this.dataList;
-			} else {
-				for (int index = 0; index < getSpecificContactListLength(keyCode); index++) {
-					Map<String, Object> newDataMap = new HashMap<String, Object>();
-					Map<String, Object> dataMap = getSpecificItem(index, keyCode);
-					String phones = (String) dataMap.get(CONTACT_PHONE_ITEM);
-					if (phones != null && phones.contains((chars != null && !"".equals(chars)) ? chars : getCurrentChar(currentChar, chars, keyCode))) {
-						newDataMap.put(CONTACT_NAME_ITEM, dataMap.get(CONTACT_NAME_ITEM));
-						newDataMap.put(CONTACT_PHONE_ITEM, phones);
-						dataList.add(newDataMap);
-					}
-				}
-			}
-			listView.setAdapter(new SimpleAdapter(NumberSearchActivity.this, dataList, R.layout.contact_list, new String[] { CONTACT_NAME_ITEM, CONTACT_PHONE_ITEM }, new int[] { R.id.textView1, R.id.textView2 }));
-			return true;
+			setPhoneTextFieldViewStatus(Color.WHITE);
+		} catch (NumberFormatException nfe) {
+			Log.e(this.getClass().getName(), "Invalid number", nfe);
+			setPhoneTextFieldViewStatus(Color.RED);
+			return false;
 		}
-		return false;
+
+		Log.d(this.getClass().getName(), "Typed numbers: " + chars);
+		if (chars == null || "".equals(chars)) {
+			dataList = NumberSearchActivity.this.dataList;
+		} else {
+			for (int index = 0; index < getSpecificContactListLength(keyCode); index++) {
+				Map<String, Object> newDataMap = new HashMap<String, Object>();
+				Map<String, Object> dataMap = getSpecificItem(index, keyCode);
+				String phones = (String) dataMap.get(CONTACT_PHONE_ITEM);
+				if (phones != null && phones.contains((chars != null && !"".equals(chars)) ? chars : getCurrentChar(currentChar, chars, keyCode))) {
+					newDataMap.put(CONTACT_NAME_ITEM, dataMap.get(CONTACT_NAME_ITEM));
+					newDataMap.put(CONTACT_PHONE_ITEM, phones);
+					dataList.add(newDataMap);
+				}
+			}
+		}
+		listView.setAdapter(new SimpleAdapter(NumberSearchActivity.this, dataList, R.layout.contact_list, new String[] { CONTACT_NAME_ITEM, CONTACT_PHONE_ITEM }, new int[] { R.id.textView1, R.id.textView2 }));
+		return true;
 	}
 
 	/**
