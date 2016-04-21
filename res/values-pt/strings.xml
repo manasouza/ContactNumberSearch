@@ -3,7 +3,7 @@
     <string name="app_name">Busca Fone</string>
     <string name="menu_settings">Configurações</string>
     <string name="tv_number_search">Número de Telefone</string>
-    <string name="title_activity_number_search">Busca contatos pelo número</string>
+    <string name="title_activity_number_search">Busca número</string>
     <string name="update_contacts">Atualizar lista de contatos</string>
     <string name="loading_title">Por favor aguarde</string>
     <string name="loading_desc_contacts">Obtendo contatos ...</string>

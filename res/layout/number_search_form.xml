@@ -1,36 +1,32 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:descendantFocusability="beforeDescendants"
     android:focusableInTouchMode="true" 
-    android:focusable="true">
+    android:focusable="true"
+    android:orientation="vertical">
 
     <EditText
         android:id="@+id/etPhoneNumber"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
         android:layout_marginTop="49dp"
-        android:ems="10"
+        android:hint="@string/tv_number_search"
         android:inputType="phone" />
 
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/etPhoneNumber"
-        android:layout_toLeftOf="@+id/etPhoneNumber"
-        android:text="@string/tv_number_search"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
+<!--     <TextView -->
+<!--         android:id="@+id/textView" -->
+<!--         android:layout_width="wrap_content" -->
+<!--         android:layout_height="wrap_content" -->
+<!--         android:text="@string/tv_number_search" -->
+<!--         android:textAppearance="?android:attr/textAppearanceMedium" /> -->
 
     <ListView
         android:id="@+id/listView1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/etPhoneNumber"
         android:layout_marginTop="17dp" >
     </ListView>
 
-</RelativeLayout>
+</LinearLayout>
