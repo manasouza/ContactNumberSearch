@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <lint>
     <issue id="NewApi">
-        <ignore path="src\br\com\mls\android\cns\NumberSearchActivity.java" />
+        <ignore path="src/br/com/mls/android/cns/NumberSearchActivity.java" />
+    </issue>
+    <issue id="TypographyEllipsis">
+        <ignore path="res/values-es/strings.xml" />
     </issue>
 </lint>
