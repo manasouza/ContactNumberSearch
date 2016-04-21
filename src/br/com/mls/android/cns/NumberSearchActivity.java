@@ -18,15 +18,12 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnFocusChangeListener;
 import android.view.View.OnKeyListener;
 import android.view.Window;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -55,9 +52,7 @@ public class NumberSearchActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.number_search_form);
         
-        // TODO: i18n
-        progressDialog = ProgressDialog.show(this,
-                "Please wait...", "Retrieving contacts ...", true);
+        showProgressDialog();
         
         etPhoneNumber = (EditText) findViewById(R.id.etPhoneNumber);
         etPhoneNumber.setOnKeyListener(new OnKeyListener() {			
@@ -103,6 +98,11 @@ public class NumberSearchActivity extends Activity {
 		}.execute();
     }
 
+	private void showProgressDialog() {
+		progressDialog = ProgressDialog.show(this,
+                getString(R.string.loading_title), getString(R.string.loading_desc_contacts), true);
+	}
+
 	@Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.number_search, menu);
@@ -119,9 +119,7 @@ public class NumberSearchActivity extends Activity {
 	}
 
     private void updateContactList() {
-    	// TODO: i18n
-        progressDialog = ProgressDialog.show(this,
-                "Please wait...", "Retrieving contacts ...", true);        
+    	showProgressDialog();        
         new AsyncTask<Void, Void, List<Map<String, Object>>>() {
         	@Override
         	protected List<Map<String, Object>> doInBackground(Void... params) {

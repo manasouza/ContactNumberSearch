@@ -1,9 +1,0 @@
-<resources>
-
-    <string name="app_name">Phone Search</string>
-    <string name="menu_settings">Settings</string>
-    <string name="tv_number_search">Phone Number</string>
-    <string name="title_activity_number_search">UANAM</string>
-    <string name="update_contacts">Update Contact List</string>
-
-</resources>

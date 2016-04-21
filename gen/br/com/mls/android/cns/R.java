@@ -31,6 +31,8 @@ public final class R {
     }
     public static final class string {
         public static final int app_name=0x7f040000;
+        public static final int loading_desc_contacts=0x7f040006;
+        public static final int loading_title=0x7f040005;
         public static final int menu_settings=0x7f040001;
         public static final int title_activity_number_search=0x7f040003;
         public static final int tv_number_search=0x7f040002;

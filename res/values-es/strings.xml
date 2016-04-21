@@ -3,6 +3,9 @@
     <string name="app_name">Buscar Teléfono</string>
     <string name="menu_settings">Configuraciones</string>
     <string name="tv_number_search">Numero de Teléfono</string>
-    <string name="title_activity_number_search">UANAM</string>
+    <string name="title_activity_number_search">Llegar contactos por número de teléfono</string>
+    <string name="update_contacts">Actualizar lista de contactos</string>
+    <string name="loading_title">Por favor espere</string>
+    <string name="loading_desc_contacts">Cargando contactos ...</string>
 
 </resources>
