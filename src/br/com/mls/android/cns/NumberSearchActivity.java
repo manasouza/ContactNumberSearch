@@ -208,7 +208,7 @@ public class NumberSearchActivity extends Activity {
 		// Validation
 		try {
 			if (chars != null && !"".equals(chars)) {
-				Integer.parseInt(chars);
+				Long.parseLong(chars);
 			}
 			setPhoneTextFieldViewStatus(Color.WHITE);
 		} catch (NumberFormatException nfe) {
