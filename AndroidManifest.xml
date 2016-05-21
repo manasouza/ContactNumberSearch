@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="br.com.mls.android.cns"
+    package="br.com.mls.contactnumbersearch"
     android:versionCode="1"
     android:versionName="1.0" >
 

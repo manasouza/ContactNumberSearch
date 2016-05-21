@@ -1,4 +1,4 @@
-package br.com.mls.android.cns;
+package br.com.mls.contactnumbersearch;
 
 import java.util.ArrayList;
 import java.util.Collections;
