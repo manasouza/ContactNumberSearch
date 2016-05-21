@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="br.com.mls.contactnumbersearch"
     android:versionCode="1"
-    android:versionName="1.0" >
+    android:versionName="1.0.0" >
 
     <uses-sdk
         android:minSdkVersion="5"
@@ -12,7 +12,7 @@
     <application
         android:icon="@drawable/appicon"
         android:label="@string/app_name"
-        android:theme="@android:style/Theme.Black" >
+        android:theme="@android:style/Theme.Black">
         <activity
             android:name=".NumberSearchActivity"
             android:label="@string/title_activity_number_search" >
