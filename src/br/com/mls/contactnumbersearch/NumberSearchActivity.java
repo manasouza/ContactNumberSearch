@@ -6,7 +6,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
@@ -15,6 +15,7 @@ import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.util.Log;
@@ -30,6 +31,8 @@ import android.widget.SimpleAdapter;
 
 public class NumberSearchActivity extends Activity {
 	
+	private static final String PHONE_NUMBER_SEPARATOR = " / ";
+
 	private static final String CONTACT_NAME_ITEM = "contactName";
 	
 	private static final String CONTACT_PHONE_ITEM = "contactPhone";
@@ -153,6 +156,7 @@ public class NumberSearchActivity extends Activity {
 		return contactList;
 	}
 
+	@TargetApi(Build.VERSION_CODES.GINGERBREAD)
 	protected List<Map<String, Object>> getPhoneContactList() {
         SharedPreferences sharedPreferences = getSharedPreferences(CONTACTS_CACHE, MODE_PRIVATE);
         Editor prefEditor = sharedPreferences.edit();
@@ -178,7 +182,7 @@ public class NumberSearchActivity extends Activity {
         			String phones = "";
         			while (phoneCursor.moveToNext()) {
         				if (!phones.isEmpty()) {
-        					phones += " / ";
+        					phones += PHONE_NUMBER_SEPARATOR;
         				}
             			map.put(CONTACT_PHONE_ITEM, phones += phoneCursor.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));        				
         			}
@@ -225,7 +229,8 @@ public class NumberSearchActivity extends Activity {
 				Map<String, Object> newDataMap = new HashMap<String, Object>();
 				Map<String, Object> dataMap = getSpecificItem(index, keyCode);
 				String phones = (String) dataMap.get(CONTACT_PHONE_ITEM);
-				if (phones != null && phones.contains((chars != null && !"".equals(chars)) ? chars : getCurrentChar(currentChar, chars, keyCode))) {
+				String onlyNumbersPhone = excludeNonNumberChars(phones);
+				if (onlyNumbersPhone != null && onlyNumbersPhone.contains((chars != null && !"".equals(chars)) ? chars : getCurrentChar(currentChar, chars, keyCode))) {
 					newDataMap.put(CONTACT_NAME_ITEM, dataMap.get(CONTACT_NAME_ITEM));
 					newDataMap.put(CONTACT_PHONE_ITEM, phones);
 					dataList.add(newDataMap);
@@ -234,6 +239,16 @@ public class NumberSearchActivity extends Activity {
 		}
 		listView.setAdapter(new SimpleAdapter(NumberSearchActivity.this, dataList, R.layout.contact_list, new String[] { CONTACT_NAME_ITEM, CONTACT_PHONE_ITEM }, new int[] { R.id.textView1, R.id.textView2 }));
 		return true;
+	}
+
+	private String excludeNonNumberChars(String phones) {
+		StringBuilder sb = new StringBuilder();
+		String[] phoneNumbers = phones.split(PHONE_NUMBER_SEPARATOR);
+		for (String number : phoneNumbers) {
+			sb.append(number.replaceAll("[^\\d.]", ""));
+			sb.append(PHONE_NUMBER_SEPARATOR);
+		}
+		return sb.toString();
 	}
 
 	/**
