@@ -29,14 +29,8 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
-public class NumberSearchActivity extends Activity {
+public class NumberSearchActivity extends Activity implements UISignalizer {
 	
-	private static final String PHONE_NUMBER_SEPARATOR = " / ";
-
-	private static final String CONTACT_NAME_ITEM = "contactName";
-	
-	private static final String CONTACT_PHONE_ITEM = "contactPhone";
-
 	protected static final String CONTACTS_CACHE = "Contacts";
 	
 	private ListView listView;
@@ -46,6 +40,12 @@ public class NumberSearchActivity extends Activity {
 	private static ProgressDialog progressDialog;
 
 	private EditText etPhoneNumber;
+	
+	NumberSearchOperations operations;
+	
+	public NumberSearchActivity() {
+		operations = new NumberSearchOperations(this);
+	}
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -62,9 +62,16 @@ public class NumberSearchActivity extends Activity {
 			@Override
 			public boolean onKey(View v, int keyCode, KeyEvent event) {
 				if (KeyEvent.ACTION_UP == event.getAction()) { // on key released
+					String chars = etPhoneNumber.getText().toString();
+					char currentChar = event.getDisplayLabel();
+					
+					boolean numberValid = operations.validateEnteredChars(chars, currentChar, keyCode);	
+					int specificContactListLength = getSpecificContactListLength(keyCode);
+					boolean backwardSearch = KeyEvent.KEYCODE_DEL == event.getKeyCode();
+					
 					// TODO: Eliminates high dependency with event keycode:
 					// 		create a boolean value that represents the backward search (when backspace) or forward search the way that it`s ruled by event.keyCode
-					return refreshContactList(etPhoneNumber.getText().toString(), event.getDisplayLabel(), event.getKeyCode());
+					return refreshContactList(chars, currentChar, specificContactListLength, numberValid, backwardSearch);
 				// below code snippet was needed because the focus on EditText blocks the MenuItem to be shown.
 				} else if (KeyEvent.KEYCODE_MENU == event.getKeyCode()) {
 					v.clearFocus();
@@ -92,7 +99,7 @@ public class NumberSearchActivity extends Activity {
 					listView = (ListView) findViewById(R.id.listView1);
 				}
 	        	listView.setAdapter(new SimpleAdapter(NumberSearchActivity.this, result, R.layout.contact_list, 
-	        						new String[] { CONTACT_NAME_ITEM, CONTACT_PHONE_ITEM }, 
+	        						new String[] { NumberSearchOperations.CONTACT_NAME_ITEM, NumberSearchOperations.CONTACT_PHONE_ITEM }, 
 	        						new int[] { R.id.textView1, R.id.textView2 }));
 	        	NumberSearchActivity.this.dataList = result;
 	        	
@@ -133,7 +140,7 @@ public class NumberSearchActivity extends Activity {
         	
         	protected void onPostExecute(java.util.List<java.util.Map<String,Object>> result) {
         		listView.setAdapter(new SimpleAdapter(NumberSearchActivity.this, result, R.layout.contact_list, 
-						new String[] { CONTACT_NAME_ITEM, CONTACT_PHONE_ITEM }, 
+						new String[] { NumberSearchOperations.CONTACT_NAME_ITEM, NumberSearchOperations.CONTACT_PHONE_ITEM }, 
 						new int[] { R.id.textView1, R.id.textView2 }));
         		NumberSearchActivity.this.dataList = result;
 	       		progressDialog.dismiss();
@@ -148,8 +155,8 @@ public class NumberSearchActivity extends Activity {
     	List<Map<String, Object>> contactList = new ArrayList<Map<String,Object>>();
     	for (String contactName : cachedContactsMap.keySet()) {
     		Map<String, Object> map = new HashMap<String, Object>();
-    		map.put(CONTACT_NAME_ITEM, contactName);
-    		map.put(CONTACT_PHONE_ITEM, cachedContactsMap.get(contactName));
+    		map.put(NumberSearchOperations.CONTACT_NAME_ITEM, contactName);
+    		map.put(NumberSearchOperations.CONTACT_PHONE_ITEM, cachedContactsMap.get(contactName));
     		contactList.add(map);
     	}
     	sortContactListByName(contactList);
@@ -172,7 +179,7 @@ public class NumberSearchActivity extends Activity {
         			//Query phone here.  Covered next
         			Cursor phoneCursor = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[] { id }, null);
         			
-        			map.put(CONTACT_NAME_ITEM, name);
+        			map.put(NumberSearchOperations.CONTACT_NAME_ITEM, name);
         			
         			if (phoneCursor == null) {
         				Log.w(this.getClass().getName(), "Null Phone Cursor for contact: " + name);
@@ -182,9 +189,9 @@ public class NumberSearchActivity extends Activity {
         			String phones = "";
         			while (phoneCursor.moveToNext()) {
         				if (!phones.isEmpty()) {
-        					phones += PHONE_NUMBER_SEPARATOR;
+        					phones += NumberSearchOperations.PHONE_NUMBER_SEPARATOR;
         				}
-            			map.put(CONTACT_PHONE_ITEM, phones += phoneCursor.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));        				
+            			map.put(NumberSearchOperations.CONTACT_PHONE_ITEM, phones += phoneCursor.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));        				
         			}
         			
         			prefEditor.putString(name, phones);
@@ -201,71 +208,30 @@ public class NumberSearchActivity extends Activity {
 		Collections.sort(contactList, new Comparator<Map<String, Object>>() {
 			@Override
 			public int compare(Map<String, Object> lhs, Map<String, Object> rhs) {
-				return lhs.get(CONTACT_NAME_ITEM).toString().compareTo(rhs.get(CONTACT_NAME_ITEM).toString());
+				return lhs.get(NumberSearchOperations.CONTACT_NAME_ITEM).toString().compareTo(rhs.get(NumberSearchOperations.CONTACT_NAME_ITEM).toString());
 			}
 		});
 	}
 
-	private boolean refreshContactList(String chars, char currentChar, int keyCode) {
+	private boolean refreshContactList(String chars, char currentChar, int specificContactListLength, boolean isNumber, boolean backwardSearch) {
 		// TODO: http://stackoverflow.com/questions/3313347/how-to-update-simpleadapter-in-android
 		List<Map<String, Object>> dataList = new ArrayList<Map<String,Object>>();
-		// Validation
-		try {
-			if (chars != null && !"".equals(chars)) {
-				Long.parseLong(chars);
-			}
-			setPhoneTextFieldViewStatus(Color.WHITE);
-		} catch (NumberFormatException nfe) {
-			Log.e(this.getClass().getName(), "Invalid number", nfe);
-			setPhoneTextFieldViewStatus(Color.RED);
-			return false;
-		}
-
 		Log.d(this.getClass().getName(), "Typed numbers: " + chars);
 		if (chars == null || "".equals(chars)) {
-			dataList = NumberSearchActivity.this.dataList;
+			dataList = this.dataList;
 		} else {
-			for (int index = 0; index < getSpecificContactListLength(keyCode); index++) {
-				Map<String, Object> newDataMap = new HashMap<String, Object>();
-				Map<String, Object> dataMap = getSpecificItem(index, keyCode);
-				String phones = (String) dataMap.get(CONTACT_PHONE_ITEM);
-				String onlyNumbersPhone = excludeNonNumberChars(phones);
-				if (onlyNumbersPhone != null && onlyNumbersPhone.contains((chars != null && !"".equals(chars)) ? chars : getCurrentChar(currentChar, chars, keyCode))) {
-					newDataMap.put(CONTACT_NAME_ITEM, dataMap.get(CONTACT_NAME_ITEM));
-					newDataMap.put(CONTACT_PHONE_ITEM, phones);
-					dataList.add(newDataMap);
-				}
-			}
+			dataList = operations.refreshContactDataList(dataList, chars, currentChar, specificContactListLength, isNumber, backwardSearch);
 		}
-		listView.setAdapter(new SimpleAdapter(NumberSearchActivity.this, dataList, R.layout.contact_list, new String[] { CONTACT_NAME_ITEM, CONTACT_PHONE_ITEM }, new int[] { R.id.textView1, R.id.textView2 }));
+		listView.setAdapter(new SimpleAdapter(NumberSearchActivity.this, dataList, R.layout.contact_list, new String[] { NumberSearchOperations.CONTACT_NAME_ITEM, NumberSearchOperations.CONTACT_PHONE_ITEM }, new int[] { R.id.textView1, R.id.textView2 }));
 		return true;
-	}
-
-	private String excludeNonNumberChars(String phones) {
-		StringBuilder sb = new StringBuilder();
-		String[] phoneNumbers = phones.split(PHONE_NUMBER_SEPARATOR);
-		for (String number : phoneNumbers) {
-			sb.append(number.replaceAll("[^\\d.]", ""));
-			sb.append(PHONE_NUMBER_SEPARATOR);
-		}
-		return sb.toString();
 	}
 
 	/**
 	 * The text field status is based on its background color
 	 * @param colorStatus some time of {@link android.graphics.Color}
 	 */
-	private void setPhoneTextFieldViewStatus(int colorStatus) {
+	void setPhoneTextFieldViewStatus(int colorStatus) {
 		this.etPhoneNumber.setBackgroundColor(colorStatus);
-	}
-
-	@SuppressWarnings("unchecked")
-	private Map<String, Object> getSpecificItem(int index, int currentTypedKeyCode) {
-		if (KeyEvent.KEYCODE_DEL == currentTypedKeyCode) {
-			return this.dataList.get(index);
-		} else {
-			return (Map<String, Object>) listView.getAdapter().getItem(index);
-		}
 	}
 
 	/**
@@ -286,12 +252,22 @@ public class NumberSearchActivity extends Activity {
 
     }
 
-	private String getCurrentChar(char currentChar, String cachedChars, int currentTypedKeyCode) {
-		return isNumber(currentChar, currentTypedKeyCode) ? String.valueOf(currentChar) : cachedChars;
+	@Override
+	@SuppressWarnings("unchecked")
+	public Map<String, Object> getSpecificItem(int index, boolean backwardSearch) {
+		if (backwardSearch) {
+			return this.dataList.get(index);
+		} else {
+			return (Map<String, Object>) listView.getAdapter().getItem(index);
+		}
 	}
-	
 
-    private boolean isNumber(char currentChar, int keyCode) {
-		return keyCode >= KeyEvent.KEYCODE_0 && keyCode <= KeyEvent.KEYCODE_9 ? true : false;
+	@Override
+	public void numberValid(boolean isValid) {
+		if (isValid) {
+			setPhoneTextFieldViewStatus(Color.WHITE);
+		} else {
+			setPhoneTextFieldViewStatus(Color.RED);
+		}
 	}
 }
