@@ -215,12 +215,12 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 
 	private boolean refreshContactList(String chars, char currentChar, int specificContactListLength, boolean isNumber, boolean backwardSearch) {
 		// TODO: http://stackoverflow.com/questions/3313347/how-to-update-simpleadapter-in-android
-		List<Map<String, Object>> dataList = new ArrayList<Map<String,Object>>();
+		List<Map<String, Object>> dataList;
 		Log.d(this.getClass().getName(), "Typed numbers: " + chars);
 		if (chars == null || "".equals(chars)) {
 			dataList = this.dataList;
 		} else {
-			dataList = operations.refreshContactDataList(dataList, chars, currentChar, specificContactListLength, isNumber, backwardSearch);
+			dataList = operations.refreshContactDataList(chars, currentChar, specificContactListLength, isNumber, backwardSearch);
 		}
 		listView.setAdapter(new SimpleAdapter(NumberSearchActivity.this, dataList, R.layout.contact_list, new String[] { NumberSearchOperations.CONTACT_NAME_ITEM, NumberSearchOperations.CONTACT_PHONE_ITEM }, new int[] { R.id.textView1, R.id.textView2 }));
 		return true;

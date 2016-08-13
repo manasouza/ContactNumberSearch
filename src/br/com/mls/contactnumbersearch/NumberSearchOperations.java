@@ -1,5 +1,6 @@
 package br.com.mls.contactnumbersearch;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +41,16 @@ public class NumberSearchOperations {
 		return keyCode >= KeyEvent.KEYCODE_0 && keyCode <= KeyEvent.KEYCODE_9 ? true : false;
 	}
 
-	List<Map<String, Object>> refreshContactDataList(List<Map<String, Object>> dataList, String chars, char currentChar, int specificContactListLength, boolean isNumber, boolean backwardSearch) {
+	/**
+	 * @param chars current chars at edit text field
+	 * @param currentChar current char inputed by user at edit text field
+	 * @param specificContactListLength lenght to be considered. According to app rules, could be different depending on char input/deletion
+	 * @param isNumber if the inputed char is a number
+	 * @param backwardSearch <code>true</code> if the user is deleting chars. <code>false</code> if it is inputing chars 
+	 * @return refreshed contact list based on params
+	 */
+	List<Map<String, Object>> refreshContactDataList(String chars, char currentChar, int specificContactListLength, boolean isNumber, boolean backwardSearch) {
+		List<Map<String, Object>> dataList = new ArrayList<Map<String,Object>>();
 		for (int index = 0; index < specificContactListLength; index++) {
 			Map<String, Object> newDataMap = new HashMap<String, Object>();
 			Map<String, Object> dataMap = uiSignalizer.getSpecificItem(index, backwardSearch);
