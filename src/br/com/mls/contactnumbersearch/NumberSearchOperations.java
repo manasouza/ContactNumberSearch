@@ -27,7 +27,8 @@ public class NumberSearchOperations {
 			if (chars != null && !"".equals(chars)) {
 				Long.parseLong(chars);
 			}
-			boolean numberValid = isNumber(currentChar, keyCode);
+			//			boolean numberValid = isNumber(currentChar, keyCode);
+			boolean numberValid = true;
 			uiSignalizer.numberValid(numberValid);
 			return numberValid;
 		} catch (NumberFormatException nfe) {
