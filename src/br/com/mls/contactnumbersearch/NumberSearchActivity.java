@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -18,6 +19,8 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -30,7 +33,7 @@ import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
 public class NumberSearchActivity extends Activity implements UISignalizer {
-	
+
 	protected static final String CONTACTS_CACHE = "Contacts";
 	
 	private ListView listView;
@@ -41,7 +44,9 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 
 	private EditText etPhoneNumber;
 	
-	NumberSearchOperations operations;
+	private NumberSearchOperations operations;
+	
+	private boolean backwardSearch;
 	
 	public NumberSearchActivity() {
 		operations = new NumberSearchOperations(this);
@@ -57,17 +62,20 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
         
         showProgressDialog();
         
+        final TextWatcher watcher = new NumberSearchTextWatcher();
         etPhoneNumber = (EditText) findViewById(R.id.etPhoneNumber);
         etPhoneNumber.setOnKeyListener(new OnKeyListener() {			
+
 			@Override
 			public boolean onKey(View v, int keyCode, KeyEvent event) {
-				if (KeyEvent.ACTION_UP == event.getAction()) { // on key released
+				// [#18] The number deletion will be treated on TextWatcher
+				if (!(KeyEvent.KEYCODE_DEL == keyCode) && KeyEvent.ACTION_UP == event.getAction()) { // on key released
 					String chars = etPhoneNumber.getText().toString();
 					char currentChar = event.getDisplayLabel();
 					
 					boolean numberValid = operations.validateEnteredChars(chars, currentChar, keyCode);	
 					int specificContactListLength = getSpecificContactListLength(keyCode);
-					boolean backwardSearch = KeyEvent.KEYCODE_DEL == event.getKeyCode();
+					backwardSearch = KeyEvent.KEYCODE_DEL == keyCode;
 					
 					// TODO: Eliminates high dependency with event keycode:
 					// 		create a boolean value that represents the backward search (when backspace) or forward search the way that it`s ruled by event.keyCode
@@ -79,6 +87,8 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 				return false;
 			}
 		});
+        // [#18] workaround for soft keyboard, existing on SamsungY, for example
+        etPhoneNumber.addTextChangedListener(watcher);
         
         new AsyncTask<Void, Void, List<Map<String, Object>>>() {
 
@@ -268,6 +278,31 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 			setPhoneTextFieldViewStatus(Color.WHITE);
 		} else {
 			setPhoneTextFieldViewStatus(Color.RED);
+		}
+	}
+	
+	public class NumberSearchTextWatcher implements TextWatcher {
+		
+		private String beforeText;
+
+		@Override
+		public void onTextChanged(CharSequence changedText, int start, int before, int count) {
+			String currentText = changedText.toString();
+			if (currentText.length() < beforeText.length()) {
+				backwardSearch = true;
+				refreshContactList(currentText, '\0', dataList.size(), true, backwardSearch);
+			}
+		}
+		
+		@Override
+		public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+			beforeText = s.toString();
+		}
+		
+		@Override
+		public void afterTextChanged(Editable s) {
+			// reset backward search for next iteration
+			backwardSearch = false;
 		}
 	}
 }
