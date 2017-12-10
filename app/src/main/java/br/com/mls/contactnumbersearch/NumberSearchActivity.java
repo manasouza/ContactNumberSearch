@@ -95,8 +95,10 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 			@Override
 			protected List<Map<String, Object>> doInBackground(Void... params) {
 				SharedPreferences sharedPreferences = getSharedPreferences(CONTACTS_CACHE, MODE_PRIVATE);
-				if (sharedPreferences.getAll().isEmpty()) {
-					return getPhoneContactList();
+				ContentResolver cr = getContentResolver();
+				Cursor cursor = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
+				if (cursor.getCount() > sharedPreferences.getAll().size() || sharedPreferences.getAll().isEmpty()) {
+					return getPhoneContactList(cursor);
 				} else {
 					return getCachedContactList(sharedPreferences.getAll());
 				}
@@ -143,9 +145,11 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
         new AsyncTask<Void, Void, List<Map<String, Object>>>() {
         	@Override
         	protected List<Map<String, Object>> doInBackground(Void... params) {
+				ContentResolver cr = getContentResolver();
+				Cursor cursor = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
         		SharedPreferences sharedPreferences = getSharedPreferences(CONTACTS_CACHE, MODE_PRIVATE);
 				sharedPreferences.edit().clear();
-        		return sharedPreferences.edit().commit() ? getPhoneContactList() : null; 
+        		return sharedPreferences.edit().commit() ? getPhoneContactList(cursor) : null;
         	}
         	
         	protected void onPostExecute(java.util.List<java.util.Map<String,Object>> result) {
@@ -174,13 +178,13 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 	}
 
 	@TargetApi(Build.VERSION_CODES.GINGERBREAD)
-	protected List<Map<String, Object>> getPhoneContactList() {
+	protected List<Map<String, Object>> getPhoneContactList(Cursor cursor) {
         SharedPreferences sharedPreferences = getSharedPreferences(CONTACTS_CACHE, MODE_PRIVATE);
         Editor prefEditor = sharedPreferences.edit();
 		ContentResolver cr = getContentResolver();
-        Cursor cursor = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
+//        Cursor cursor = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
         List<Map<String, Object>> contactList = new ArrayList<Map<String,Object>>();
-        if (cursor.getCount() > 0) {
+		if (cursor.getCount() > 0) {
         	while (cursor.moveToNext()) {
         		Map<String, Object> map = new HashMap<String, Object>();
         		String id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
