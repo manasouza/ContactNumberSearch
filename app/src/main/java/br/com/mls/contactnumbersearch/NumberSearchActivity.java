@@ -97,13 +97,17 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 				SharedPreferences sharedPreferences = getSharedPreferences(CONTACTS_CACHE, MODE_PRIVATE);
 				ContentResolver cr = getContentResolver();
 				Cursor cursor = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
-				if (cursor.getCount() > sharedPreferences.getAll().size() || sharedPreferences.getAll().isEmpty()) {
+				if (cachedContactsDiffers(sharedPreferences, cursor)) {
 					return getPhoneContactList(cursor);
 				} else {
 					return getCachedContactList(sharedPreferences.getAll());
 				}
 			}
-			
+
+			private boolean cachedContactsDiffers(SharedPreferences sharedPreferences, Cursor cursor) {
+				return cursor.getCount() != sharedPreferences.getAll().size();
+			}
+
 			@Override
 			protected void onPostExecute(List<Map<String, Object>> result) {
 				super.onPostExecute(result);
@@ -182,7 +186,6 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
         SharedPreferences sharedPreferences = getSharedPreferences(CONTACTS_CACHE, MODE_PRIVATE);
         Editor prefEditor = sharedPreferences.edit();
 		ContentResolver cr = getContentResolver();
-//        Cursor cursor = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
         List<Map<String, Object>> contactList = new ArrayList<Map<String,Object>>();
 		if (cursor.getCount() > 0) {
         	while (cursor.moveToNext()) {
