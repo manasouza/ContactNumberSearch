@@ -56,11 +56,14 @@ public class NumberSearchOperations {
 			Map<String, Object> newDataMap = new HashMap<String, Object>();
 			Map<String, Object> dataMap = uiSignalizer.getSpecificItem(index, backwardSearch);
 			String phones = (String) dataMap.get(NumberSearchOperations.CONTACT_PHONE_ITEM);
-			String onlyNumbersPhone = excludeNonNumberChars(phones);
-			if (onlyNumbersPhone != null && onlyNumbersPhone.contains((chars != null && !"".equals(chars)) ? chars : getCurrentChar(currentChar, chars, isNumber))) {
-				newDataMap.put(NumberSearchOperations.CONTACT_NAME_ITEM, dataMap.get(NumberSearchOperations.CONTACT_NAME_ITEM));
-				newDataMap.put(NumberSearchOperations.CONTACT_PHONE_ITEM, phones);
-				dataList.add(newDataMap);
+			// [#24] if it's a merged contact, one of them could come without phone number
+			if (phones != null) {
+				String onlyNumbersPhone = excludeNonNumberChars(phones);
+				if (onlyNumbersPhone != null && onlyNumbersPhone.contains((chars != null && !"".equals(chars)) ? chars : getCurrentChar(currentChar, chars, isNumber))) {
+					newDataMap.put(NumberSearchOperations.CONTACT_NAME_ITEM, dataMap.get(NumberSearchOperations.CONTACT_NAME_ITEM));
+					newDataMap.put(NumberSearchOperations.CONTACT_PHONE_ITEM, phones);
+					dataList.add(newDataMap);
+				}
 			}
 		}
 		return dataList;

@@ -192,6 +192,7 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
         		Map<String, Object> map = new HashMap<String, Object>();
         		String id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
         		String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+        		// TODO: [#24] verify why merged contacts are passing through this validation
         		if (Integer.parseInt(cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
         			//Query phone here.  Covered next
         			Cursor phoneCursor = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[] { id }, null);
