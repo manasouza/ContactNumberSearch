@@ -39,7 +39,7 @@ public class NumberSearchOperations {
 	}
 
 	boolean isNumber(char currentChar, int keyCode) {
-		return keyCode >= KeyEvent.KEYCODE_0 && keyCode <= KeyEvent.KEYCODE_9 ? true : false;
+		return keyCode >= KeyEvent.KEYCODE_0 && keyCode <= KeyEvent.KEYCODE_9;
 	}
 
 	/**
@@ -51,9 +51,9 @@ public class NumberSearchOperations {
 	 * @return refreshed contact list based on params
 	 */
 	List<Map<String, Object>> refreshContactDataList(String chars, char currentChar, int specificContactListLength, boolean isNumber, boolean backwardSearch) {
-		List<Map<String, Object>> dataList = new ArrayList<Map<String,Object>>();
+		List<Map<String, Object>> dataList = new ArrayList<>();
 		for (int index = 0; index < specificContactListLength; index++) {
-			Map<String, Object> newDataMap = new HashMap<String, Object>();
+			Map<String, Object> newDataMap = new HashMap<>();
 			Map<String, Object> dataMap = uiSignalizer.getSpecificItem(index, backwardSearch);
 			String phones = (String) dataMap.get(NumberSearchOperations.CONTACT_PHONE_ITEM);
 			// [#24] if it's a merged contact, one of them could come without phone number

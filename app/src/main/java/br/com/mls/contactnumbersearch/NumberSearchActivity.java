@@ -165,14 +165,14 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 	       		if (result == null) {
 	       			throw new IllegalStateException("Shared preferences failed to clear previous data. Contact list is null");
 	       		}
-        	};
+        	}
         }.execute();
 	}
 
 	protected List<Map<String, Object>> getCachedContactList(Map<String, ?> cachedContactsMap) {
-    	List<Map<String, Object>> contactList = new ArrayList<Map<String,Object>>();
+    	List<Map<String, Object>> contactList = new ArrayList<>();
     	for (String contactName : cachedContactsMap.keySet()) {
-    		Map<String, Object> map = new HashMap<String, Object>();
+    		Map<String, Object> map = new HashMap<>();
     		map.put(NumberSearchOperations.CONTACT_NAME_ITEM, contactName);
     		map.put(NumberSearchOperations.CONTACT_PHONE_ITEM, cachedContactsMap.get(contactName));
     		contactList.add(map);
@@ -186,10 +186,10 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
         SharedPreferences sharedPreferences = getSharedPreferences(CONTACTS_CACHE, MODE_PRIVATE);
         Editor prefEditor = sharedPreferences.edit();
 		ContentResolver cr = getContentResolver();
-        List<Map<String, Object>> contactList = new ArrayList<Map<String,Object>>();
+        List<Map<String, Object>> contactList = new ArrayList<>();
 		if (cursor.getCount() > 0) {
         	while (cursor.moveToNext()) {
-        		Map<String, Object> map = new HashMap<String, Object>();
+        		Map<String, Object> map = new HashMap<>();
         		String id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
         		String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
         		// TODO: [#24] verify why merged contacts are passing through this validation

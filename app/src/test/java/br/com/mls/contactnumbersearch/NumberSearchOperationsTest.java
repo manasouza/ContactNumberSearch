@@ -120,7 +120,7 @@ public class NumberSearchOperationsTest {
 		private List<Map<String,Object>> mapList;
 		
 		public UISignalizerMock() {
-			mapList = new ArrayList<Map<String,Object>>();
+			mapList = new ArrayList<>();
 			mapList.add(addContact("Neo", "3245-9087"));
 			mapList.add(addContact("Trinity", "(19) 98765-0987"));
 			mapList.add(addContact("Morpheus", "019987650000"));
@@ -129,7 +129,7 @@ public class NumberSearchOperationsTest {
 		}
 
 		private Map<String, Object> addContact(String name, String phone) {
-			Map<String, Object> map = new HashMap<String, Object>();
+			Map<String, Object> map = new HashMap<>();
 			map.put(NumberSearchOperations.CONTACT_NAME_ITEM, name);
 			map.put(NumberSearchOperations.CONTACT_PHONE_ITEM, phone);
 			return map;
