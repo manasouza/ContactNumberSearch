@@ -1,8 +1,6 @@
 package br.com.mls.contactnumbersearch;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +42,7 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 
 	private EditText etPhoneNumber;
 	
-	private NumberSearchOperations operations;
+	NumberSearchOperations operations;
 	
 	private boolean backwardSearch;
 	
@@ -177,7 +175,7 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
     		map.put(NumberSearchOperations.CONTACT_PHONE_ITEM, cachedContactsMap.get(contactName));
     		contactList.add(map);
     	}
-    	sortContactListByName(contactList);
+    	operations.sortContactListByName(contactList);
 		return contactList;
 	}
 
@@ -218,17 +216,8 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
         	}
         	prefEditor.apply();
         }
-        sortContactListByName(contactList);
+        operations.sortContactListByName(contactList);
 		return contactList;
-	}
-
-	private void sortContactListByName(List<Map<String, Object>> contactList) {
-		Collections.sort(contactList, new Comparator<Map<String, Object>>() {
-			@Override
-			public int compare(Map<String, Object> lhs, Map<String, Object> rhs) {
-				return lhs.get(NumberSearchOperations.CONTACT_NAME_ITEM).toString().compareTo(rhs.get(NumberSearchOperations.CONTACT_NAME_ITEM).toString());
-			}
-		});
 	}
 
 	private boolean refreshContactList(String chars, char currentChar, int specificContactListLength, boolean isNumber, boolean backwardSearch) {

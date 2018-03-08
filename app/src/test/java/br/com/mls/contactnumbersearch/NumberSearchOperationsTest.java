@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 import static org.hamcrest.Matchers.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -113,6 +114,44 @@ public class NumberSearchOperationsTest {
 
 		// THEN
 		assertEquals(specificContactListLength, dataList.size());
+	}
+
+	@Test
+	public void sortConsideringAccentAndLowerCaseChars() {
+		// GIVEN
+		String contactNameItem = NumberSearchOperations.CONTACT_NAME_ITEM;
+		List<String> expectedContactList = Arrays.asList("alberto", "Álvaro", "Antônio", "Élder", "Eliane", "Valdir");
+
+		// GIVEN
+	    ArrayList<Map<String, Object>> contactList = new ArrayList<>();
+		Map<String, Object> contact1 = new HashMap<>();
+		contact1.put(contactNameItem, "Álvaro");
+		contactList.add(contact1);
+		Map<String, Object> contact2 = new HashMap<>();
+		contact2.put(contactNameItem, "Antônio");
+		contactList.add(contact2);
+		Map<String, Object> contact3 = new HashMap<>();
+		contact3.put(contactNameItem, "Élder");
+		contactList.add(contact3);
+		Map<String, Object> contact4 = new HashMap<>();
+		contact4.put(contactNameItem, "Eliane");
+		contactList.add(contact4);
+		Map<String, Object> contact5 = new HashMap<>();
+		contact5.put(contactNameItem, "alberto");
+		contactList.add(contact5);
+		Map<String, Object> contact6 = new HashMap<>();
+		contact6.put(contactNameItem, "Valdir");
+		contactList.add(contact6);
+
+		// WHEN
+		this.numberSearchOperations.sortContactListByName(contactList);
+		List<String> currentContactList = new ArrayList<>();
+		for (Map<String, Object> contactMap : contactList) {
+			currentContactList.add(contactMap.get(contactNameItem).toString());
+		}
+
+		// THEN
+		assertEquals(expectedContactList, currentContactList);
 	}
 
 	public class UISignalizerMock implements UISignalizer {

@@ -1,6 +1,9 @@
 package br.com.mls.contactnumbersearch;
 
+import java.text.Collator;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,5 +86,16 @@ public class NumberSearchOperations {
 		return isNumber ? String.valueOf(currentChar) : cachedChars;
 	}
 
-	
+	void sortContactListByName(List<Map<String, Object>> contactList) {
+		Collections.sort(contactList, new Comparator<Map<String, Object>>() {
+			@Override
+			public int compare(Map<String, Object> lhs, Map<String, Object> rhs) {
+				String o = lhs.get(CONTACT_NAME_ITEM).toString();
+				String o1 = rhs.get(CONTACT_NAME_ITEM).toString();
+				Collator collator = Collator.getInstance();
+				collator.setStrength(Collator.PRIMARY);
+				return collator.compare(o, o1);
+			}
+		});
+	}
 }
