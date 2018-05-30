@@ -1,10 +1,5 @@
 package br.com.mls.contactnumbersearch;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -29,6 +24,11 @@ import android.view.Window;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class NumberSearchActivity extends Activity implements UISignalizer {
 
@@ -61,19 +61,20 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
         showProgressDialog();
         
         final TextWatcher watcher = new NumberSearchTextWatcher();
-        etPhoneNumber = (EditText) findViewById(R.id.etPhoneNumber);
+        etPhoneNumber = findViewById(R.id.etPhoneNumber);
         etPhoneNumber.setOnKeyListener(new OnKeyListener() {			
 
 			@Override
 			public boolean onKey(View v, int keyCode, KeyEvent event) {
 				// [#18] The number deletion will be treated on TextWatcher
 				if (!(KeyEvent.KEYCODE_DEL == keyCode) && KeyEvent.ACTION_UP == event.getAction()) { // on key released
+					// TODO: refer this as "Search As Numbers Are Typed" extracting to a method (backwardSearch = false). The inverse operation is at TextWatcher (backwardSearch = true)
 					String chars = etPhoneNumber.getText().toString();
 					char currentChar = event.getDisplayLabel();
 					
-					boolean numberValid = operations.validateEnteredChars(chars, currentChar, keyCode);	
+					boolean numberValid = operations.validateEnteredChars(chars);
 					int specificContactListLength = getSpecificContactListLength(keyCode);
-					backwardSearch = KeyEvent.KEYCODE_DEL == keyCode;
+					backwardSearch = false;
 					
 					// TODO: Eliminates high dependency with event keycode:
 					// 		create a boolean value that represents the backward search (when backspace) or forward search the way that it`s ruled by event.keyCode
@@ -110,7 +111,7 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 			protected void onPostExecute(List<Map<String, Object>> result) {
 				super.onPostExecute(result);
 				if (listView == null) {
-					listView = (ListView) findViewById(R.id.listView1);
+					listView = findViewById(R.id.listView1);
 				}
 	        	listView.setAdapter(new SimpleAdapter(NumberSearchActivity.this, result, R.layout.contact_list, 
 	        						new String[] { NumberSearchOperations.CONTACT_NAME_ITEM, NumberSearchOperations.CONTACT_PHONE_ITEM }, 
@@ -248,16 +249,15 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 	 * @return
 	 */
 	private int getSpecificContactListLength(int currentTypedKeyCode) {
-		return KeyEvent.KEYCODE_DEL == currentTypedKeyCode ? this.dataList.size() : listView.getAdapter().getCount();
+		if (KeyEvent.KEYCODE_DEL == currentTypedKeyCode) {
+			Log.d(this.getClass().getSimpleName(), "Removing last typed char");
+			return this.dataList.size();
+
+		} else {
+			Log.d(this.getClass().getSimpleName(), "Adding new char");
+			return listView.getAdapter().getCount();
+		}
 	}
-
-	public static class ProgressListener {
-
-        public void dismiss() {
-            progressDialog.dismiss();
-        }
-
-    }
 
 	@Override
 	@SuppressWarnings("unchecked")
@@ -286,6 +286,7 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 		public void onTextChanged(CharSequence changedText, int start, int before, int count) {
 			String currentText = changedText.toString();
 			if (currentText.length() < beforeText.length()) {
+				// TODO: refer this as "Search As Numbers Are Deleted" (backwardSearch = true), extracting to a method. The inverse operation is at KeyListener (backwardSearch = false)
 				backwardSearch = true;
 				refreshContactList(currentText, '\0', dataList.size(), true, backwardSearch);
 			}

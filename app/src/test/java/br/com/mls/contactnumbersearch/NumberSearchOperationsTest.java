@@ -13,8 +13,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import android.view.KeyEvent;
-
 public class NumberSearchOperationsTest {
 
 	private NumberSearchOperations numberSearchOperations;
@@ -27,19 +25,19 @@ public class NumberSearchOperationsTest {
 	}
 	
 	@Test
-	public void validateNumberTyped() throws Exception {
-		boolean isNumber = numberSearchOperations.validateEnteredChars("3", '5', KeyEvent.KEYCODE_5);
+	public void validateNumberTyped() {
+		boolean isNumber = numberSearchOperations.validateEnteredChars("3");
 		assertTrue(isNumber);
 	}
 	
 	@Test
-	public void validateNonNumberTyped() throws Exception {
-		boolean isNumber = numberSearchOperations.validateEnteredChars("3", 'D', KeyEvent.KEYCODE_D);
+	public void validateNonNumberTyped() {
+		boolean isNumber = numberSearchOperations.validateEnteredChars("3");
 		assertFalse(isNumber);
 	}
 	
 	@Test
-	public void enterFirstChar() throws Exception {
+	public void enterFirstChar() {
 		// GIVEN
 		boolean backwardSearch = false;
 		boolean isNumber = true;
@@ -60,7 +58,7 @@ public class NumberSearchOperationsTest {
 	}
 	
 	@Test
-	public void enterSecondCharAndOn() throws Exception {
+	public void enterSecondCharAndOn() {
 		// GIVEN
 		boolean backwardSearch = false;
 		boolean isNumber = true;
@@ -81,7 +79,7 @@ public class NumberSearchOperationsTest {
 	}
 	
 	@Test
-	public void deleteOneCharAfterThreeEnters() throws Exception {
+	public void deleteOneCharAfterThreeEnters() {
 		// GIVEN
 		boolean backwardSearch = true;
 		boolean isNumber = true;
@@ -101,7 +99,7 @@ public class NumberSearchOperationsTest {
 	
 	@Test
 	@Ignore("It's not on scope of numberSearchOperations.refreshContactDataList, but could be in the future. The verify to empty chars is done previously")
-	public void deleteLastChar() throws Exception {
+	public void deleteLastChar() {
 		// GIVEN
 		boolean backwardSearch = true;
 		boolean isNumber = true;
@@ -158,7 +156,7 @@ public class NumberSearchOperationsTest {
 		
 		private List<Map<String,Object>> mapList;
 		
-		public UISignalizerMock() {
+		UISignalizerMock() {
 			mapList = new ArrayList<>();
 			mapList.add(addContact("Neo", "3245-9087"));
 			mapList.add(addContact("Trinity", "(19) 98765-0987"));
@@ -184,7 +182,7 @@ public class NumberSearchOperationsTest {
 			return mapList.get(index);
 		}
 		
-		public int getMapListSize() {
+		int getMapListSize() {
 			return mapList.size();
 		}
 	}

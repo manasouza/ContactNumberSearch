@@ -1,5 +1,7 @@
 package br.com.mls.contactnumbersearch;
 
+import android.util.Log;
+
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -7,9 +9,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import android.util.Log;
-import android.view.KeyEvent;
 
 public class NumberSearchOperations {
 
@@ -21,28 +20,22 @@ public class NumberSearchOperations {
 
 	static final String CONTACT_NAME_ITEM = "contactName";
 
-	public NumberSearchOperations(UISignalizer signalizer) {
+	NumberSearchOperations(UISignalizer signalizer) {
 		this.uiSignalizer = signalizer;
 	}
 	
-	boolean validateEnteredChars(String chars, char currentChar, int keyCode) {
+	boolean validateEnteredChars(String chars) {
 		try {
 			if (chars != null && !"".equals(chars)) {
 				Long.parseLong(chars);
 			}
-			//			boolean numberValid = isNumber(currentChar, keyCode);
-			boolean numberValid = true;
-			uiSignalizer.numberValid(numberValid);
-			return numberValid;
+			uiSignalizer.numberValid(true);
+			return true;
 		} catch (NumberFormatException nfe) {
 			Log.e(this.getClass().getName(), "Invalid number", nfe);
 			uiSignalizer.numberValid(false);
 			return false;
 		}
-	}
-
-	boolean isNumber(char currentChar, int keyCode) {
-		return keyCode >= KeyEvent.KEYCODE_0 && keyCode <= KeyEvent.KEYCODE_9;
 	}
 
 	/**
@@ -72,7 +65,7 @@ public class NumberSearchOperations {
 		return dataList;
 	}
 
-	String excludeNonNumberChars(String phones) {
+	private String excludeNonNumberChars(String phones) {
 		StringBuilder sb = new StringBuilder();
 		String[] phoneNumbers = phones.split(PHONE_NUMBER_SEPARATOR);
 		for (String number : phoneNumbers) {
@@ -82,7 +75,7 @@ public class NumberSearchOperations {
 		return sb.toString();
 	}
 
-	String getCurrentChar(char currentChar, String cachedChars, boolean isNumber) {
+	private String getCurrentChar(char currentChar, String cachedChars, boolean isNumber) {
 		return isNumber ? String.valueOf(currentChar) : cachedChars;
 	}
 
