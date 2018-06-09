@@ -21,7 +21,7 @@ public class NumberSearchOperationsTest {
 	@Before
 	public void setUp() {
 		signalizer = new UISignalizerMock();
-		numberSearchOperations = new NumberSearchOperations(signalizer);
+		numberSearchOperations = new NumberSearchOperations(signalizer, new LogUtilMock());
 	}
 	
 	@Test
@@ -32,7 +32,7 @@ public class NumberSearchOperationsTest {
 	
 	@Test
 	public void validateNonNumberTyped() {
-		boolean isNumber = numberSearchOperations.validateEnteredChars("3");
+		boolean isNumber = numberSearchOperations.validateEnteredChars("-");
 		assertFalse(isNumber);
 	}
 	
@@ -184,6 +184,14 @@ public class NumberSearchOperationsTest {
 		
 		int getMapListSize() {
 			return mapList.size();
+		}
+	}
+
+	private class LogUtilMock extends LogUtil {
+
+		@Override
+		void logError(Throwable exception, String className, String message) {
+
 		}
 	}
 }

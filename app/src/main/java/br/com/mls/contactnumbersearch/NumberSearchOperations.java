@@ -1,7 +1,5 @@
 package br.com.mls.contactnumbersearch;
 
-import android.util.Log;
-
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,12 +14,15 @@ public class NumberSearchOperations {
 	
 	private UISignalizer uiSignalizer;
 
+	private LogUtil logUtil;
+
 	static final String CONTACT_PHONE_ITEM = "contactPhone";
 
 	static final String CONTACT_NAME_ITEM = "contactName";
 
-	NumberSearchOperations(UISignalizer signalizer) {
+	NumberSearchOperations(UISignalizer signalizer, LogUtil logUtil) {
 		this.uiSignalizer = signalizer;
+		this.logUtil = logUtil;
 	}
 	
 	boolean validateEnteredChars(String chars) {
@@ -32,7 +33,7 @@ public class NumberSearchOperations {
 			uiSignalizer.numberValid(true);
 			return true;
 		} catch (NumberFormatException nfe) {
-			Log.e(this.getClass().getName(), "Invalid number", nfe);
+			logUtil.logError(nfe, this.getClass().getName(), "Invalid number");
 			uiSignalizer.numberValid(false);
 			return false;
 		}
