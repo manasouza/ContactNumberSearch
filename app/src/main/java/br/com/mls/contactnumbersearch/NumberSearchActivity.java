@@ -43,11 +43,9 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 	private EditText etPhoneNumber;
 	
 	NumberSearchOperations operations;
-	
-	private boolean backwardSearch;
-	
+
 	public NumberSearchActivity() {
-		operations = new NumberSearchOperations(this);
+		operations = new NumberSearchOperations(this, new LogUtil());
 	}
 
     @Override
@@ -73,12 +71,10 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 					char currentChar = event.getDisplayLabel();
 					
 					boolean numberValid = operations.validateEnteredChars(chars);
-					int specificContactListLength = getSpecificContactListLength(keyCode);
-					backwardSearch = false;
-					
-					// TODO: Eliminates high dependency with event keycode:
-					// 		create a boolean value that represents the backward search (when backspace) or forward search the way that it`s ruled by event.keyCode
-					return refreshContactList(chars, currentChar, specificContactListLength, numberValid, backwardSearch);
+					if (listView != null && listView.getAdapter() != null) {
+						int specificContactListLength = listView.getAdapter().getCount();
+						return refreshContactList(chars, currentChar, specificContactListLength, numberValid, false);
+					}
 				// below code snippet was needed because the focus on EditText blocks the MenuItem to be shown.
 				} else if (KeyEvent.KEYCODE_MENU == event.getKeyCode()) {
 					v.clearFocus();
@@ -104,7 +100,7 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 			}
 
 			private boolean cachedContactsDiffers(SharedPreferences sharedPreferences, Cursor cursor) {
-				return cursor.getCount() != sharedPreferences.getAll().size();
+				return sharedPreferences.getAll() != null && cursor.getCount() != sharedPreferences.getAll().size();
 			}
 
 			@Override
@@ -242,23 +238,6 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 		this.etPhoneNumber.setBackgroundColor(colorStatus);
 	}
 
-	/**
-	 * Forward search uses the ListViewAdapter size
-	 * Backward search uses all registered contacts
-	 * @param currentTypedKeyCode
-	 * @return
-	 */
-	private int getSpecificContactListLength(int currentTypedKeyCode) {
-		if (KeyEvent.KEYCODE_DEL == currentTypedKeyCode) {
-			Log.d(this.getClass().getSimpleName(), "Removing last typed char");
-			return this.dataList.size();
-
-		} else {
-			Log.d(this.getClass().getSimpleName(), "Adding new char");
-			return listView.getAdapter().getCount();
-		}
-	}
-
 	@Override
 	@SuppressWarnings("unchecked")
 	public Map<String, Object> getSpecificItem(int index, boolean backwardSearch) {
@@ -285,10 +264,9 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 		@Override
 		public void onTextChanged(CharSequence changedText, int start, int before, int count) {
 			String currentText = changedText.toString();
-			if (currentText.length() < beforeText.length()) {
+			if (dataList != null && currentText.length() < beforeText.length()) {
 				// TODO: refer this as "Search As Numbers Are Deleted" (backwardSearch = true), extracting to a method. The inverse operation is at KeyListener (backwardSearch = false)
-				backwardSearch = true;
-				refreshContactList(currentText, '\0', dataList.size(), true, backwardSearch);
+				refreshContactList(currentText, '\0', dataList.size(), true, true);
 			}
 		}
 		
@@ -300,7 +278,6 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 		@Override
 		public void afterTextChanged(Editable s) {
 			// reset backward search for next iteration
-			backwardSearch = false;
 		}
 	}
 }
