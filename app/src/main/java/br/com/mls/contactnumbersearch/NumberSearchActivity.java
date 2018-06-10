@@ -66,14 +66,17 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 			public boolean onKey(View v, int keyCode, KeyEvent event) {
 				// [#18] The number deletion will be treated on TextWatcher
 				if (!(KeyEvent.KEYCODE_DEL == keyCode) && KeyEvent.ACTION_UP == event.getAction()) { // on key released
-					// TODO: refer this as "Search As Numbers Are Typed" extracting to a method (backwardSearch = false). The inverse operation is at TextWatcher (backwardSearch = true)
-					String chars = etPhoneNumber.getText().toString();
+					String currentText = etPhoneNumber.getText().toString();
+					Log.d(this.getClass().getName(), "Typed numbers: " + currentText);
 					char currentChar = event.getDisplayLabel();
-					
-					boolean numberValid = operations.validateEnteredChars(chars);
-					if (listView != null && listView.getAdapter() != null) {
+					boolean numberValid = operations.validateEnteredChars(currentText);
+					if (numberValid && !isEmptyValue(currentText) && listView != null && listView.getAdapter() != null) {
 						int specificContactListLength = listView.getAdapter().getCount();
-						return refreshContactList(chars, currentChar, specificContactListLength, numberValid, false);
+						List<Map<String, Object>> updatedDataList = executeForwardSearch(currentText, currentChar, specificContactListLength);
+						listView.setAdapter(new SimpleAdapter(NumberSearchActivity.this, updatedDataList,
+								R.layout.contact_list, new String[] { NumberSearchOperations.CONTACT_NAME_ITEM, NumberSearchOperations.CONTACT_PHONE_ITEM },
+								new int[] { R.id.textView1, R.id.textView2 }));
+						return true;
 					}
 				// below code snippet was needed because the focus on EditText blocks the MenuItem to be shown.
 				} else if (KeyEvent.KEYCODE_MENU == event.getKeyCode()) {
@@ -118,7 +121,6 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 			}
 		}.execute();
     }
-
 	private void showProgressDialog() {
 		progressDialog = ProgressDialog.show(this,
                 getString(R.string.loading_title), getString(R.string.loading_desc_contacts), true);
@@ -217,17 +219,8 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 		return contactList;
 	}
 
-	private boolean refreshContactList(String chars, char currentChar, int specificContactListLength, boolean isNumber, boolean backwardSearch) {
-		// TODO: http://stackoverflow.com/questions/3313347/how-to-update-simpleadapter-in-android
-		List<Map<String, Object>> dataList;
-		Log.d(this.getClass().getName(), "Typed numbers: " + chars);
-		if (chars == null || "".equals(chars)) {
-			dataList = this.dataList;
-		} else {
-			dataList = operations.refreshContactDataList(chars, currentChar, specificContactListLength, isNumber, backwardSearch);
-		}
-		listView.setAdapter(new SimpleAdapter(NumberSearchActivity.this, dataList, R.layout.contact_list, new String[] { NumberSearchOperations.CONTACT_NAME_ITEM, NumberSearchOperations.CONTACT_PHONE_ITEM }, new int[] { R.id.textView1, R.id.textView2 }));
-		return true;
+	private boolean isEmptyValue(String chars) {
+		return chars == null || "".equals(chars);
 	}
 
 	/**
@@ -263,10 +256,13 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 
 		@Override
 		public void onTextChanged(CharSequence changedText, int start, int before, int count) {
+			Log.d(this.getClass().getName(), "Typed numbers: " + changedText);
 			String currentText = changedText.toString();
-			if (dataList != null && currentText.length() < beforeText.length()) {
-				// TODO: refer this as "Search As Numbers Are Deleted" (backwardSearch = true), extracting to a method. The inverse operation is at KeyListener (backwardSearch = false)
-				refreshContactList(currentText, '\0', dataList.size(), true, true);
+			if (!isEmptyValue(currentText) && dataList != null && currentText.length() < beforeText.length()) {
+				List<Map<String, Object>> updatedDataList = executeBackwardSearch(currentText, dataList.size());
+				listView.setAdapter(new SimpleAdapter(NumberSearchActivity.this, updatedDataList,
+						R.layout.contact_list, new String[] { NumberSearchOperations.CONTACT_NAME_ITEM, NumberSearchOperations.CONTACT_PHONE_ITEM },
+						new int[] { R.id.textView1, R.id.textView2 }));
 			}
 		}
 		
@@ -280,4 +276,13 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 			// reset backward search for next iteration
 		}
 	}
+
+	private List<Map<String, Object>> executeBackwardSearch(String currentText, int size) {
+		return operations.refreshContactDataList(currentText, '\0', size, true, true);
+	}
+
+	private List<Map<String, Object>> executeForwardSearch(String currentText, char currentChar, int size) {
+		return operations.refreshContactDataList(currentText, currentChar, size, true, false);
+	}
+
 }
