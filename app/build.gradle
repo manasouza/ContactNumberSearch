@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 21
-    buildToolsVersion '26.0.2'
+    compileSdkVersion 27
+    buildToolsVersion '27.0.3'
 
     defaultConfig {
         applicationId "br.com.mls.contactnumbersearch"
-        minSdkVersion 5
+        minSdkVersion 14
         targetSdkVersion 15
     }
 
@@ -19,9 +19,7 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:support-v4:21.0.3'
+    compile 'com.android.support:support-v13:27.1.1'
     testCompile 'org.hamcrest:hamcrest-all:1.3'
     testCompile 'junit:junit:4.12'
-//    compile files('libs/hamcrest-all-1.3.jar')
-//    compile files('libs/junit-4.12.jar')
 }
