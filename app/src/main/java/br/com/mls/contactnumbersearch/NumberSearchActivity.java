@@ -59,7 +59,7 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
         showProgressDialog();
         
         final TextWatcher watcher = new NumberSearchTextWatcher();
-        etPhoneNumber = findViewById(R.id.etPhoneNumber);
+        etPhoneNumber = (EditText) findViewById(R.id.etPhoneNumber);
         etPhoneNumber.setOnKeyListener(new OnKeyListener() {			
 
 			@Override
@@ -110,7 +110,7 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 			protected void onPostExecute(List<Map<String, Object>> result) {
 				super.onPostExecute(result);
 				if (listView == null) {
-					listView = findViewById(R.id.listView1);
+					listView = (ListView) findViewById(R.id.listView1);
 				}
 	        	listView.setAdapter(new SimpleAdapter(NumberSearchActivity.this, result, R.layout.contact_list, 
 	        						new String[] { NumberSearchOperations.CONTACT_NAME_ITEM, NumberSearchOperations.CONTACT_PHONE_ITEM }, 
@@ -263,6 +263,9 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 				listView.setAdapter(new SimpleAdapter(NumberSearchActivity.this, updatedDataList,
 						R.layout.contact_list, new String[] { NumberSearchOperations.CONTACT_NAME_ITEM, NumberSearchOperations.CONTACT_PHONE_ITEM },
 						new int[] { R.id.textView1, R.id.textView2 }));
+			} else {
+				Log.d(this.getClass().getName(), String.format("onTextChanged not performed - currentText: %s / beforeText: %s / dataList: %s",
+						currentText, beforeText, dataList));
 			}
 		}
 		
