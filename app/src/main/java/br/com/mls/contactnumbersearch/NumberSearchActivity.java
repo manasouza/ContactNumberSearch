@@ -103,7 +103,12 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 			}
 
 			private boolean cachedContactsDiffers(SharedPreferences sharedPreferences, Cursor cursor) {
-				return sharedPreferences.getAll() != null && cursor.getCount() != sharedPreferences.getAll().size();
+				if (sharedPreferences.getAll() != null) {
+					return cursor.getCount() != sharedPreferences.getAll().size();
+				} else {
+					Log.d(this.getClass().getName(), String.format("Shared Prefs status: %s / Cursor status: %s", sharedPreferences, cursor));
+				}
+				return false;
 			}
 
 			@Override
