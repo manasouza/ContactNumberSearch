@@ -95,10 +95,16 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 				SharedPreferences sharedPreferences = getSharedPreferences(CONTACTS_CACHE, MODE_PRIVATE);
 				ContentResolver cr = getContentResolver();
 				Cursor cursor = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
-				if (cachedContactsDiffers(sharedPreferences, cursor)) {
-					return getPhoneContactList(cursor);
-				} else {
-					return getCachedContactList(sharedPreferences.getAll());
+				try {
+					if (cachedContactsDiffers(sharedPreferences, cursor)) {
+						return getPhoneContactList(cursor);
+					} else {
+						return getCachedContactList(sharedPreferences.getAll());
+					}
+				} finally {
+					if (cursor != null) {
+						cursor.close();
+					}
 				}
 			}
 
