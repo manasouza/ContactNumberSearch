@@ -108,15 +108,6 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 				}
 			}
 
-			private boolean cachedContactsDiffers(SharedPreferences sharedPreferences, Cursor cursor) {
-				if (sharedPreferences.getAll() != null) {
-					return cursor.getCount() != sharedPreferences.getAll().size();
-				} else {
-					Log.d(this.getClass().getName(), String.format("Shared Prefs status: %s / Cursor status: %s", sharedPreferences, cursor));
-				}
-				return false;
-			}
-
 			@Override
 			protected void onPostExecute(List<Map<String, Object>> result) {
 				super.onPostExecute(result);
@@ -132,6 +123,7 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 			}
 		}.execute();
     }
+    
 	private void showProgressDialog() {
 		progressDialog = ProgressDialog.show(this,
                 getString(R.string.loading_title), getString(R.string.loading_desc_contacts), true);
@@ -177,6 +169,20 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
         }.execute();
 	}
 
+	boolean cachedContactsDiffers(SharedPreferences sharedPreferences, Cursor cursor) {
+		if (sharedPreferences.getAll() != null && cursor != null) {
+			return cursor.getCount() != sharedPreferences.getAll().size();
+		} else {
+			Log.d(this.getClass().getName(), String.format("Shared Prefs status: %s / Cursor status: %s", sharedPreferences, cursor));
+			if (cursor == null) {
+				return false;
+			} else if (sharedPreferences.getAll() == null) {
+				return true;
+			}
+		}
+		throw new IllegalStateException("Incompatible application state with SharedPrefs and database Cursor");
+	}
+
 	protected List<Map<String, Object>> getCachedContactList(Map<String, ?> cachedContactsMap) {
     	List<Map<String, Object>> contactList = new ArrayList<>();
     	for (String contactName : cachedContactsMap.keySet()) {
@@ -200,7 +206,6 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
         		Map<String, Object> map = new HashMap<>();
         		String id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
         		String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-        		// TODO: [#24] verify why merged contacts are passing through this validation
         		if (Integer.parseInt(cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
         			//Query phone here.  Covered next
         			Cursor phoneCursor = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[] { id }, null);
