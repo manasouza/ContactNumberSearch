@@ -1,17 +1,22 @@
 package br.com.mls.contactnumbersearch;
 
+import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -33,7 +38,8 @@ import java.util.Map;
 public class NumberSearchActivity extends Activity implements UISignalizer {
 
 	protected static final String CONTACTS_CACHE = "Contacts";
-	
+	private static final int REQUEST_READ_CONTACTS = 1;
+
 	private ListView listView;
 	
 	List<Map<String, Object>> dataList;
@@ -48,18 +54,27 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 		operations = new NumberSearchOperations(this, new LogUtil());
 	}
 
-    @Override
+	@Override
+	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+		if (requestCode == REQUEST_READ_CONTACTS && grantResults.length > 0
+				&& grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+			executeContactSearch();
+		} else {
+			Log.d(this.getClass().getName(), "User has chosen to not grant permission");
+			this.finish();
+		}
+	}
+
+	@Override
     public void onCreate(Bundle savedInstanceState) {
-    	requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-    	setProgressBarIndeterminateVisibility(true);
-    	
+		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+		setProgressBarIndeterminateVisibility(true);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.number_search_form);
-        
-        showProgressDialog();
-        
+
         final TextWatcher watcher = new NumberSearchTextWatcher();
-        etPhoneNumber = (EditText) findViewById(R.id.etPhoneNumber);
+        etPhoneNumber = findViewById(R.id.etPhoneNumber);
         etPhoneNumber.setOnKeyListener(new OnKeyListener() {			
 
 			@Override
@@ -87,8 +102,21 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 		});
         // [#18] workaround for soft keyboard, existing on SamsungY, for example
         etPhoneNumber.addTextChangedListener(watcher);
-        
-        new AsyncTask<Void, Void, List<Map<String, Object>>>() {
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)
+				!= PackageManager.PERMISSION_GRANTED) {
+			ActivityCompat.requestPermissions(this,
+					new String[] {Manifest.permission.READ_CONTACTS}, REQUEST_READ_CONTACTS);
+		} else {
+			Log.d(this.getClass().getName(), "Permissions granted");
+			executeContactSearch();
+		}
+	}
+
+	private void executeContactSearch() {
+		showProgressDialog();
+
+		new AsyncTask<Void, Void, List<Map<String, Object>>>() {
 
 			@Override
 			protected List<Map<String, Object>> doInBackground(Void... params) {
@@ -112,18 +140,18 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 			protected void onPostExecute(List<Map<String, Object>> result) {
 				super.onPostExecute(result);
 				if (listView == null) {
-					listView = (ListView) findViewById(R.id.listView1);
+					listView = findViewById(R.id.listView1);
 				}
-	        	listView.setAdapter(new SimpleAdapter(NumberSearchActivity.this, result, R.layout.contact_list, 
-	        						new String[] { NumberSearchOperations.CONTACT_NAME_ITEM, NumberSearchOperations.CONTACT_PHONE_ITEM }, 
-	        						new int[] { R.id.textView1, R.id.textView2 }));
-	        	NumberSearchActivity.this.dataList = result;
-	        	
-	        	progressDialog.dismiss();
+				listView.setAdapter(new SimpleAdapter(NumberSearchActivity.this, result, R.layout.contact_list,
+									new String[] { NumberSearchOperations.CONTACT_NAME_ITEM, NumberSearchOperations.CONTACT_PHONE_ITEM },
+									new int[] { R.id.textView1, R.id.textView2 }));
+				NumberSearchActivity.this.dataList = result;
+
+				progressDialog.dismiss();
 			}
 		}.execute();
-    }
-    
+	}
+
 	private void showProgressDialog() {
 		progressDialog = ProgressDialog.show(this,
                 getString(R.string.loading_title), getString(R.string.loading_desc_contacts), true);
@@ -217,15 +245,16 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
         				continue;
         			}
         			
-        			String phones = "";
+        			StringBuilder phones = new StringBuilder();
         			while (phoneCursor.moveToNext()) {
-        				if (!phones.isEmpty()) {
-        					phones += NumberSearchOperations.PHONE_NUMBER_SEPARATOR;
+        				if (phones.length() > 0) {
+        					phones.append(NumberSearchOperations.PHONE_NUMBER_SEPARATOR);
         				}
-            			map.put(NumberSearchOperations.CONTACT_PHONE_ITEM, phones += phoneCursor.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));        				
+						phones.append(phoneCursor
+								.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));
         			}
-        			
-        			prefEditor.putString(name, phones);
+					map.put(NumberSearchOperations.CONTACT_PHONE_ITEM, phones.toString());
+        			prefEditor.putString(name, phones.toString());
         			contactList.add(map);
         		}
         	}
