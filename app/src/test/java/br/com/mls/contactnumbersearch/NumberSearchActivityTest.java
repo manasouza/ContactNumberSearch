@@ -9,9 +9,14 @@ import android.database.DataSetObserver;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,6 +25,9 @@ import java.util.Set;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+@RunWith(PowerMockRunner.class)
+//@PrepareForTest({Log.class})
+@PrepareForTest({NumberSearchActivityTest.class , Log.class})
 public class NumberSearchActivityTest {
 
     private NumberSearchActivity activity;
@@ -31,6 +39,7 @@ public class NumberSearchActivityTest {
         activity = new NumberSearchActivity();
         cursor = new CursorMock();
         sharedPrefs = new SharedPreferencesMock();
+        PowerMockito.mockStatic(Log.class);
     }
 
     @Test
