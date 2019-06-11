@@ -40,6 +40,8 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 	protected static final String CONTACTS_CACHE = "Contacts";
 	private static final int REQUEST_READ_CONTACTS = 1;
 
+	private static final String CURSOR_REPEATED_COUNT = "cursorDiff";
+
 	private ListView listView;
 	
 	List<Map<String, Object>> dataList;
@@ -122,7 +124,8 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 			protected List<Map<String, Object>> doInBackground(Void... params) {
 				SharedPreferences sharedPreferences = getSharedPreferences(CONTACTS_CACHE, MODE_PRIVATE);
 				ContentResolver cr = getContentResolver();
-				Cursor cursor = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
+				Cursor cursor = cr.query(ContactsContract.Contacts.CONTENT_URI, null,
+						ContactsContract.Contacts.HAS_PHONE_NUMBER + "!=" + 0, null, null);
 				try {
 					if (cachedContactsDiffers(sharedPreferences, cursor)) {
 						return getPhoneContactList(cursor);
@@ -199,7 +202,7 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 
 	boolean cachedContactsDiffers(SharedPreferences sharedPreferences, Cursor cursor) {
 		if (sharedPreferences.getAll() != null && cursor != null) {
-			return cursor.getCount() != sharedPreferences.getAll().size();
+			return cursor.getCount() != (sharedPreferences.getAll().size() + sharedPreferences.getInt(CURSOR_REPEATED_COUNT, 0));
 		} else {
 			Log.d(this.getClass().getName(), String.format("Shared Prefs status: %s / Cursor status: %s", sharedPreferences, cursor));
 			if (cursor == null) {
@@ -229,6 +232,7 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
         Editor prefEditor = sharedPreferences.edit();
 		ContentResolver cr = getContentResolver();
         List<Map<String, Object>> contactList = new ArrayList<>();
+		int alreadyAddedCount = 0;
 		if (cursor.getCount() > 0) {
         	while (cursor.moveToNext()) {
         		Map<String, Object> map = new HashMap<>();
@@ -253,11 +257,32 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 						phones.append(phoneCursor
 								.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));
         			}
-					map.put(NumberSearchOperations.CONTACT_PHONE_ITEM, phones.toString());
+
+        			map.put(NumberSearchOperations.CONTACT_PHONE_ITEM, phones.toString());
         			prefEditor.putString(name, phones.toString());
-        			contactList.add(map);
-        		}
+
+        			boolean added = false;
+					for (Map<String, Object> addedMaps : contactList) {
+						if (addedMaps.get(NumberSearchOperations.CONTACT_NAME_ITEM).equals(name)) {
+							Log.w(this.getClass().getName(), "ALREADY ADDED: " + map);
+							StringBuilder phonesSB = new StringBuilder(addedMaps.get(NumberSearchOperations.CONTACT_PHONE_ITEM).toString())
+									.append(NumberSearchOperations.PHONE_NUMBER_SEPARATOR)
+									.append(phones);
+							addedMaps.put(NumberSearchOperations.CONTACT_PHONE_ITEM, phonesSB.toString());
+							prefEditor.putString(name, phones.toString());
+							added = true;
+							alreadyAddedCount++;
+							break;
+						}
+					}
+					if (!added) {
+						contactList.add(map);
+					}
+        		} else {
+					Log.w(this.getClass().getName(), "No number for: " + name + " / id: " + id);
+				}
         	}
+			prefEditor.putInt(CURSOR_REPEATED_COUNT, alreadyAddedCount);
         	prefEditor.apply();
         }
         operations.sortContactListByName(contactList);
