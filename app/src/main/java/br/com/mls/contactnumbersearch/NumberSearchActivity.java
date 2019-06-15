@@ -225,40 +225,47 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 
 	@TargetApi(Build.VERSION_CODES.GINGERBREAD)
 	protected List<Map<String, Object>> getPhoneContactList(Cursor cursor) {
+		Cursor phoneCursor = null;
         SharedPreferences sharedPreferences = getSharedPreferences(CONTACTS_CACHE, MODE_PRIVATE);
         Editor prefEditor = sharedPreferences.edit();
 		ContentResolver cr = getContentResolver();
         List<Map<String, Object>> contactList = new ArrayList<>();
 		if (cursor.getCount() > 0) {
-        	while (cursor.moveToNext()) {
-        		Map<String, Object> map = new HashMap<>();
-        		String id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
-        		String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-        		if (Integer.parseInt(cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
-        			//Query phone here.  Covered next
-        			Cursor phoneCursor = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[] { id }, null);
-        			
-        			map.put(NumberSearchOperations.CONTACT_NAME_ITEM, name);
-        			
-        			if (phoneCursor == null) {
-        				Log.w(this.getClass().getName(), "Null Phone Cursor for contact: " + name);
-        				continue;
-        			}
-        			
-        			StringBuilder phones = new StringBuilder();
-        			while (phoneCursor.moveToNext()) {
-        				if (phones.length() > 0) {
-        					phones.append(NumberSearchOperations.PHONE_NUMBER_SEPARATOR);
-        				}
-						phones.append(phoneCursor
-								.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));
-        			}
-					map.put(NumberSearchOperations.CONTACT_PHONE_ITEM, phones.toString());
-        			prefEditor.putString(name, phones.toString());
-        			contactList.add(map);
-        		}
-        	}
-        	prefEditor.apply();
+			try {
+				while (cursor.moveToNext()) {
+					Map<String, Object> map = new HashMap<>();
+					String id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
+					String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+					if (Integer.parseInt(cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
+						//Query phone here.  Covered next
+						phoneCursor = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[]{id}, null);
+
+						map.put(NumberSearchOperations.CONTACT_NAME_ITEM, name);
+
+						if (phoneCursor == null) {
+							Log.w(this.getClass().getName(), "Null Phone Cursor for contact: " + name);
+							continue;
+						}
+
+						StringBuilder phones = new StringBuilder();
+						while (phoneCursor.moveToNext()) {
+							if (phones.length() > 0) {
+								phones.append(NumberSearchOperations.PHONE_NUMBER_SEPARATOR);
+							}
+							phones.append(phoneCursor
+									.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));
+						}
+						map.put(NumberSearchOperations.CONTACT_PHONE_ITEM, phones.toString());
+						prefEditor.putString(name, phones.toString());
+						contactList.add(map);
+					}
+				}
+				prefEditor.apply();
+			} finally {
+				if (phoneCursor != null) {
+					phoneCursor.close();
+				}
+			}
         }
         operations.sortContactListByName(contactList);
 		return contactList;
