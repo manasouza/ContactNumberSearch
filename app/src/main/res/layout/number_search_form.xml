@@ -13,14 +13,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="49dp"
         android:hint="@string/tv_number_search"
-        android:inputType="phone" />
-
-<!--     <TextView -->
-<!--         android:id="@+id/textView" -->
-<!--         android:layout_width="wrap_content" -->
-<!--         android:layout_height="wrap_content" -->
-<!--         android:text="@string/tv_number_search" -->
-<!--         android:textAppearance="?android:attr/textAppearanceMedium" /> -->
+        android:inputType="phone"
+        android:cursorVisible="true"/>
 
     <ListView
         android:id="@+id/listView1"

@@ -41,7 +41,10 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 	private static final int REQUEST_READ_CONTACTS = 1;
 
 	private ListView listView;
-	
+
+	/**
+	 * This is the list with all the contacts and is loaded during initialization or "update contacts" command
+	 */
 	List<Map<String, Object>> dataList;
 
 	private static ProgressDialog progressDialog;
@@ -49,6 +52,8 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 	private EditText etPhoneNumber;
 	
 	NumberSearchOperations operations;
+
+	private boolean executingForwardSearch = false;
 
 	public NumberSearchActivity() {
 		operations = new NumberSearchOperations(this, new LogUtil());
@@ -79,6 +84,9 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 
 			@Override
 			public boolean onKey(View v, int keyCode, KeyEvent event) {
+
+				executingForwardSearch = true;
+
 				// [#18] The number deletion will be treated on TextWatcher
 				if (!(KeyEvent.KEYCODE_DEL == keyCode) && KeyEvent.ACTION_UP == event.getAction()) { // on key released
 					String currentText = etPhoneNumber.getText().toString();
@@ -91,6 +99,8 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 						listView.setAdapter(new SimpleAdapter(NumberSearchActivity.this, updatedDataList,
 								R.layout.contact_list, new String[] { NumberSearchOperations.CONTACT_NAME_ITEM, NumberSearchOperations.CONTACT_PHONE_ITEM },
 								new int[] { R.id.textView1, R.id.textView2 }));
+
+						executingForwardSearch = false;
 						return true;
 					}
 				// below code snippet was needed because the focus on EditText blocks the MenuItem to be shown.
@@ -313,8 +323,17 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 			if (!isEmptyValue(currentText) && dataList != null && currentText.length() < beforeText.length()) {
 				List<Map<String, Object>> updatedDataList = executeBackwardSearch(currentText, dataList.size());
 				listView.setAdapter(new SimpleAdapter(NumberSearchActivity.this, updatedDataList,
-						R.layout.contact_list, new String[] { NumberSearchOperations.CONTACT_NAME_ITEM, NumberSearchOperations.CONTACT_PHONE_ITEM },
-						new int[] { R.id.textView1, R.id.textView2 }));
+						R.layout.contact_list, new String[]{NumberSearchOperations.CONTACT_NAME_ITEM, NumberSearchOperations.CONTACT_PHONE_ITEM},
+						new int[]{R.id.textView1, R.id.textView2}));
+				executingForwardSearch = false;
+			// TODO: There must be a refactoring on the operation names. Below operation needs to update
+				//	 all dataList reference because it represents a copy/paste event.
+				// 	 Given that the operation is similar to what executeBackwardSeach does, for instance it's implemented this way
+			} else if (!executingForwardSearch && !isEmptyValue(currentText) && dataList != null) {
+				List<Map<String, Object>> updatedDataList = executeBackwardSearch(currentText, dataList.size());
+				listView.setAdapter(new SimpleAdapter(NumberSearchActivity.this, updatedDataList,
+						R.layout.contact_list, new String[]{NumberSearchOperations.CONTACT_NAME_ITEM, NumberSearchOperations.CONTACT_PHONE_ITEM},
+						new int[]{R.id.textView1, R.id.textView2}));
 			} else {
 				Log.d(this.getClass().getName(), String.format("onTextChanged not performed - currentText: %s / beforeText: %s / dataList: %s",
 						currentText, beforeText, dataList));
@@ -332,10 +351,23 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 		}
 	}
 
+	/**
+	 * This search is represented when user is deleting the last char of {@code currentText}
+	 * @param currentText
+	 * @param size
+	 * @return
+	 */
 	private List<Map<String, Object>> executeBackwardSearch(String currentText, int size) {
 		return operations.refreshContactDataList(currentText, '\0', size, true, true);
 	}
 
+	/**
+	 * This search is represented when user is inputing a new char
+	 * @param currentText
+	 * @param currentChar
+	 * @param size
+	 * @return
+	 */
 	private List<Map<String, Object>> executeForwardSearch(String currentText, char currentChar, int size) {
 		return operations.refreshContactDataList(currentText, currentChar, size, true, false);
 	}
