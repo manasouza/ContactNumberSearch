@@ -85,8 +85,6 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 			@Override
 			public boolean onKey(View v, int keyCode, KeyEvent event) {
 
-				executingForwardSearch = true;
-
 				// [#18] The number deletion will be treated on TextWatcher
 				if (!(KeyEvent.KEYCODE_DEL == keyCode) && KeyEvent.ACTION_UP == event.getAction()) { // on key released
 					String currentText = etPhoneNumber.getText().toString();
@@ -106,6 +104,8 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 				// below code snippet was needed because the focus on EditText blocks the MenuItem to be shown.
 				} else if (KeyEvent.KEYCODE_MENU == event.getKeyCode()) {
 					v.clearFocus();
+				} else if (KeyEvent.ACTION_DOWN == event.getAction()) {
+					executingForwardSearch = true;
 				}
 				return false;
 			}
@@ -334,6 +334,11 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 				listView.setAdapter(new SimpleAdapter(NumberSearchActivity.this, updatedDataList,
 						R.layout.contact_list, new String[]{NumberSearchOperations.CONTACT_NAME_ITEM, NumberSearchOperations.CONTACT_PHONE_ITEM},
 						new int[]{R.id.textView1, R.id.textView2}));
+			} else if (isEmptyValue(currentText) && dataList != null) {
+				listView.setAdapter(new SimpleAdapter(NumberSearchActivity.this, dataList,
+						R.layout.contact_list, new String[]{NumberSearchOperations.CONTACT_NAME_ITEM, NumberSearchOperations.CONTACT_PHONE_ITEM},
+						new int[]{R.id.textView1, R.id.textView2}));
+				executingForwardSearch = false;
 			} else {
 				Log.d(this.getClass().getName(), String.format("onTextChanged not performed - currentText: %s / beforeText: %s / dataList: %s",
 						currentText, beforeText, dataList));
