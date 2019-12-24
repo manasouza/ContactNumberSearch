@@ -132,16 +132,11 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 			protected List<Map<String, Object>> doInBackground(Void... params) {
 				SharedPreferences sharedPreferences = getSharedPreferences(CONTACTS_CACHE, MODE_PRIVATE);
 				ContentResolver cr = getContentResolver();
-				Cursor cursor = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
-				try {
+				try (Cursor cursor = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null)) {
 					if (cachedContactsDiffers(sharedPreferences, cursor)) {
 						return getPhoneContactList(cursor);
 					} else {
 						return getCachedContactList(sharedPreferences.getAll());
-					}
-				} finally {
-					if (cursor != null) {
-						cursor.close();
 					}
 				}
 			}
@@ -183,7 +178,7 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 	}
 
     private void updateContactList() {
-    	showProgressDialog();        
+    	showProgressDialog();
         new AsyncTask<Void, Void, List<Map<String, Object>>>() {
         	@Override
         	protected List<Map<String, Object>> doInBackground(Void... params) {
@@ -193,10 +188,10 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 				sharedPreferences.edit().clear();
         		return sharedPreferences.edit().commit() ? getPhoneContactList(cursor) : null;
         	}
-        	
+
         	protected void onPostExecute(java.util.List<java.util.Map<String,Object>> result) {
-        		listView.setAdapter(new SimpleAdapter(NumberSearchActivity.this, result, R.layout.contact_list, 
-						new String[] { NumberSearchOperations.CONTACT_NAME_ITEM, NumberSearchOperations.CONTACT_PHONE_ITEM }, 
+        		listView.setAdapter(new SimpleAdapter(NumberSearchActivity.this, result, R.layout.contact_list,
+						new String[] { NumberSearchOperations.CONTACT_NAME_ITEM, NumberSearchOperations.CONTACT_PHONE_ITEM },
 						new int[] { R.id.textView1, R.id.textView2 }));
         		NumberSearchActivity.this.dataList = result;
 	       		progressDialog.dismiss();
@@ -233,30 +228,23 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 		return contactList;
 	}
 
-	@TargetApi(Build.VERSION_CODES.GINGERBREAD)
 	protected List<Map<String, Object>> getPhoneContactList(Cursor cursor) {
-		Cursor phoneCursor = null;
         SharedPreferences sharedPreferences = getSharedPreferences(CONTACTS_CACHE, MODE_PRIVATE);
         Editor prefEditor = sharedPreferences.edit();
 		ContentResolver cr = getContentResolver();
         List<Map<String, Object>> contactList = new ArrayList<>();
 		if (cursor.getCount() > 0) {
-			try {
-				while (cursor.moveToNext()) {
-					Map<String, Object> map = new HashMap<>();
-					String id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
-					String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-					if (Integer.parseInt(cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
-						//Query phone here.  Covered next
-						phoneCursor = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[]{id}, null);
-
+			while (cursor.moveToNext()) {
+				Map<String, Object> map = new HashMap<>();
+				String id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
+				String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+				if (Integer.parseInt(cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
+					try (Cursor phoneCursor = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[]{id}, null)) {
 						map.put(NumberSearchOperations.CONTACT_NAME_ITEM, name);
-
 						if (phoneCursor == null) {
 							Log.w(this.getClass().getName(), "Null Phone Cursor for contact: " + name);
 							continue;
 						}
-
 						StringBuilder phones = new StringBuilder();
 						while (phoneCursor.moveToNext()) {
 							if (phones.length() > 0) {
@@ -270,13 +258,9 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 						contactList.add(map);
 					}
 				}
-				prefEditor.apply();
-			} finally {
-				if (phoneCursor != null) {
-					phoneCursor.close();
-				}
 			}
-        }
+			prefEditor.apply();
+		}
         operations.sortContactListByName(contactList);
 		return contactList;
 	}
