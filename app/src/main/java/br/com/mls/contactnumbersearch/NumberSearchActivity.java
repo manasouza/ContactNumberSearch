@@ -1,8 +1,6 @@
 package br.com.mls.contactnumbersearch;
 
 import android.Manifest;
-import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.SharedPreferences;
@@ -11,12 +9,8 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
-import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -26,16 +20,22 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnKeyListener;
 import android.view.Window;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class NumberSearchActivity extends Activity implements UISignalizer {
+public class NumberSearchActivity extends AppCompatActivity implements UISignalizer {
 
 	protected static final String CONTACTS_CACHE = "Contacts";
 	private static final int REQUEST_READ_CONTACTS = 1;
@@ -49,7 +49,7 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 
 	private static ProgressDialog progressDialog;
 
-	private EditText etPhoneNumber;
+	private TextInputLayout etPhoneNumber;
 	
 	NumberSearchOperations operations;
 
@@ -87,7 +87,7 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 
 				// [#18] The number deletion will be treated on TextWatcher
 				if (!(KeyEvent.KEYCODE_DEL == keyCode) && KeyEvent.ACTION_UP == event.getAction()) { // on key released
-					String currentText = etPhoneNumber.getText().toString();
+					String currentText = etPhoneNumber.getEditText().getText().toString();
 					Log.d(this.getClass().getName(), "Typed numbers: " + currentText);
 					char currentChar = event.getDisplayLabel();
 					boolean numberValid = operations.validateEnteredChars(currentText);
@@ -111,7 +111,7 @@ public class NumberSearchActivity extends Activity implements UISignalizer {
 			}
 		});
         // [#18] workaround for soft keyboard, existing on SamsungY, for example
-        etPhoneNumber.addTextChangedListener(watcher);
+        etPhoneNumber.getEditText().addTextChangedListener(watcher);
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)
 				!= PackageManager.PERMISSION_GRANTED) {
